@@ -1,133 +1,113 @@
+import os
+import logging
 from flask import current_app
 from .email import send_certificate_email
-from .sms import send_sar_certificate_sms
-from .whatsapp import send_sar_certificate_whatsapp
+from .sms import send_sms_notification
+from .whatsapp import send_whatsapp_notification
+
+logger = logging.getLogger(__name__)
 
 def notify_certificate_generation(user, application, certificate_path):
     """
     Send notifications about certificate generation through multiple channels
     
     Args:
-        user (User): User object containing contact information
-        application (SARApplication): SAR application object
-        certificate_path (str): Path to the generated certificate file
+        user: User object with contact information
+        application: SARApplication object with certificate details
+        certificate_path: Path to the generated certificate file
     
     Returns:
-        dict: Status of each notification channel (email, sms, whatsapp)
+        dict: Status of each notification channel {email: bool, sms: bool, whatsapp: bool}
     """
-    result = {
-        'email': False,
-        'sms': False,
-        'whatsapp': False
+    if not user or not application or not certificate_path:
+        logger.error("Missing required parameters for notifications")
+        return {"error": "Missing required parameters"}
+    
+    notification_status = {
+        "email": False,
+        "sms": False,
+        "whatsapp": False
     }
     
-    # Send email notification
-    try:
-        result['email'] = send_certificate_email(
-            user.email, 
-            user.first_name, 
-            application.certificate_number,
-            application.reference_number,
-            certificate_path
-        )
-    except Exception as e:
-        current_app.logger.error(f"Error sending certificate email: {str(e)}")
-    
-    # Send SMS notification
-    try:
-        result['sms'] = send_sar_certificate_sms(
-            user.phone_number,
-            f"{user.first_name} {user.last_name}",
-            application.certificate_number,
-            application.reference_number
-        )
-    except Exception as e:
-        current_app.logger.error(f"Error sending certificate SMS: {str(e)}")
-    
-    # Send WhatsApp notification
-    try:
-        result['whatsapp'] = send_sar_certificate_whatsapp(
-            user.phone_number,
-            certificate_path,
-            application
-        )
-    except Exception as e:
-        current_app.logger.error(f"Error sending certificate WhatsApp: {str(e)}")
-    
-    # Log the notification status
-    current_app.logger.info(
-        f"Certificate notifications for {application.certificate_number}: "
-        f"Email: {'Sent' if result['email'] else 'Failed'}, "
-        f"SMS: {'Sent' if result['sms'] else 'Failed'}, "
-        f"WhatsApp: {'Sent' if result['whatsapp'] else 'Failed'}"
+    # Full path to certificate file
+    certificate_full_path = os.path.join(
+        current_app.static_folder, 
+        'uploads', 
+        certificate_path
     )
     
-    return result
-
-def send_subscription_notifications(user, subscription):
-    """
-    Send notifications about subscription payment/renewal
+    if not os.path.exists(certificate_full_path):
+        logger.error(f"Certificate file not found at {certificate_full_path}")
+        return {"error": f"Certificate file not found at {certificate_path}"}
     
-    Args:
-        user (User): User object containing contact information
-        subscription (Subscription): Subscription object
+    # 1. Send email notification with certificate attachment
+    try:
+        if user.email:
+            email_sent = send_certificate_email(
+                email=user.email,
+                name=f"{user.first_name} {user.last_name}",
+                certificate_number=application.certificate_number,
+                reference_number=application.reference_number,
+                certificate_path=certificate_full_path
+            )
+            notification_status["email"] = email_sent
+            logger.info(f"Email notification {'sent' if email_sent else 'failed'} to {user.email}")
+        else:
+            logger.warning(f"No email address available for user {user.id}")
+    except Exception as e:
+        logger.error(f"Email notification error: {str(e)}")
     
-    Returns:
-        dict: Status of each notification channel (email, sms)
-    """
-    result = {
-        'email': False,
-        'sms': False
-    }
+    # 2. Send SMS notification if Twilio credentials are configured
+    try:
+        if user.phone_number and all([
+            os.environ.get("TWILIO_ACCOUNT_SID"),
+            os.environ.get("TWILIO_AUTH_TOKEN"),
+            os.environ.get("TWILIO_PHONE_NUMBER")
+        ]):
+            message = (
+                f"Hello {user.first_name}, your NITP Site Analysis Report certificate "
+                f"(#{application.certificate_number}) has been generated and sent to your email. "
+                f"Thank you for using our services."
+            )
+            sms_sent = send_sms_notification(
+                to_phone_number=user.phone_number,
+                message=message
+            )
+            notification_status["sms"] = sms_sent
+            logger.info(f"SMS notification {'sent' if sms_sent else 'failed'} to {user.phone_number}")
+        else:
+            if not user.phone_number:
+                logger.warning(f"No phone number available for user {user.id}")
+            else:
+                logger.warning("SMS notification skipped: Twilio credentials not configured")
+    except Exception as e:
+        logger.error(f"SMS notification error: {str(e)}")
     
-    # TODO: Implement subscription email notification
-    # result['email'] = send_subscription_email(...)
+    # 3. Send WhatsApp notification if Twilio credentials are configured
+    try:
+        if user.phone_number and all([
+            os.environ.get("TWILIO_ACCOUNT_SID"),
+            os.environ.get("TWILIO_AUTH_TOKEN"),
+            os.environ.get("TWILIO_PHONE_NUMBER")
+        ]):
+            message = (
+                f"Hello {user.first_name}, your NITP Site Analysis Report certificate "
+                f"(#{application.certificate_number}) has been generated and sent to your email. "
+                f"You can also download it from your account dashboard. "
+                f"Thank you for using our services."
+            )
+            whatsapp_sent = send_whatsapp_notification(
+                to_phone_number=user.phone_number,
+                message=message
+            )
+            notification_status["whatsapp"] = whatsapp_sent
+            logger.info(f"WhatsApp notification {'sent' if whatsapp_sent else 'failed'} to {user.phone_number}")
+        else:
+            if not user.phone_number:
+                logger.warning(f"No phone number available for user {user.id}")
+            else:
+                logger.warning("WhatsApp notification skipped: Twilio credentials not configured")
+    except Exception as e:
+        logger.error(f"WhatsApp notification error: {str(e)}")
     
-    # TODO: Implement subscription SMS notification
-    # result['sms'] = send_subscription_sms(...)
-    
-    # Log the notification status
-    current_app.logger.info(
-        f"Subscription notifications for User ID {user.id}, Year {subscription.year}: "
-        f"Email: {'Sent' if result['email'] else 'Failed'}, "
-        f"SMS: {'Sent' if result['sms'] else 'Failed'}"
-    )
-    
-    return result
-
-def send_sar_status_notifications(user, application):
-    """
-    Send notifications about SAR application status changes
-    
-    Args:
-        user (User): User object containing contact information
-        application (SARApplication): SAR application object
-    
-    Returns:
-        dict: Status of each notification channel (email, sms)
-    """
-    result = {
-        'email': False,
-        'sms': False
-    }
-    
-    # TODO: Implement SAR status email notification
-    # result['email'] = send_sar_status_email(...)
-    
-    # TODO: Implement SAR status SMS notification
-    # from .sms import send_sar_status_update
-    # result['sms'] = send_sar_status_update(
-    #     user.phone_number,
-    #     f"{user.first_name} {user.last_name}",
-    #     application.reference_number,
-    #     application.status.value
-    # )
-    
-    # Log the notification status
-    current_app.logger.info(
-        f"SAR status notifications for {application.reference_number}: "
-        f"Email: {'Sent' if result['email'] else 'Failed'}, "
-        f"SMS: {'Sent' if result['sms'] else 'Failed'}"
-    )
-    
-    return result
+    return notification_status

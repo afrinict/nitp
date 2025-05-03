@@ -14,8 +14,6 @@ from models import SARApplication, SARStatus, User, PaymentStatus, AuditLog
 from utils.payment import generate_payment_reference, initialize_payment, verify_payment
 from utils.certificate import generate_sar_certificate
 from utils.qrcode import generate_qr_code
-from utils.email import send_sar_certificate
-from utils.whatsapp import send_sar_certificate_whatsapp
 
 sar_bp = Blueprint('sar', __name__, url_prefix='/sar')
 

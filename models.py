@@ -232,3 +232,16 @@ class EmailVerification(db.Model):
 
     # Relationship
     user = db.relationship('User')
+
+class NotificationSetting(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    display_name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    is_enabled = db.Column(db.Boolean, default=False)
+    config_values = db.Column(db.JSON, default={})
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<NotificationSetting {self.name}: {"Enabled" if self.is_enabled else "Disabled"}>'

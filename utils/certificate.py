@@ -1,13 +1,16 @@
 import os
 import io
 import uuid
+import logging
 from datetime import datetime
 from fpdf import FPDF
 from flask import current_app, url_for
 from PIL import Image
 
 from .qrcode import generate_certificate_qr_code
-from .notification import notify_certificate_generation
+from .email import send_certificate_email
+
+logger = logging.getLogger(__name__)
 
 def generate_certificate_number():
     """
@@ -148,7 +151,68 @@ def generate_sar_certificate(application, user=None):
         application.qr_code_path = qr_code_path
         
         # Send notifications through various channels
-        notification_status = notify_certificate_generation(user, application, certificate_path)
+        notification_status = {
+            "email": False,
+            "sms": False,
+            "whatsapp": False
+        }
+        
+        # Send email notification
+        try:
+            email_sent = send_certificate_email(
+                email=user.email,
+                name=f"{user.first_name} {user.last_name}",
+                certificate_number=application.certificate_number,
+                reference_number=application.reference_number,
+                certificate_path=file_path
+            )
+            notification_status["email"] = email_sent
+            logger.info(f"Email notification {'sent' if email_sent else 'failed'} to {user.email}")
+        except Exception as e:
+            logger.error(f"Email notification error: {str(e)}")
+        
+        # For SMS and WhatsApp, we'll need to import inside the function to avoid circular imports
+        try:
+            # Only attempt if Twilio credentials are available
+            if user.phone_number and all([
+                os.environ.get("TWILIO_ACCOUNT_SID"),
+                os.environ.get("TWILIO_AUTH_TOKEN"),
+                os.environ.get("TWILIO_PHONE_NUMBER")
+            ]):
+                # Import here to avoid circular dependencies
+                from .sms import send_sms_notification
+                
+                message = (
+                    f"Hello {user.first_name}, your NITP Site Analysis Report certificate "
+                    f"(#{application.certificate_number}) has been generated and sent to your email. "
+                    f"Thank you for using our services."
+                )
+                sms_sent = send_sms_notification(user.phone_number, message)
+                notification_status["sms"] = sms_sent
+        except Exception as e:
+            logger.error(f"SMS notification error: {str(e)}")
+        
+        # WhatsApp notification
+        try:
+            # Only attempt if Twilio credentials are available
+            if user.phone_number and all([
+                os.environ.get("TWILIO_ACCOUNT_SID"),
+                os.environ.get("TWILIO_AUTH_TOKEN"),
+                os.environ.get("TWILIO_PHONE_NUMBER")
+            ]):
+                # Import here to avoid circular dependencies
+                from .whatsapp import send_whatsapp_notification
+                
+                message = (
+                    f"Hello {user.first_name}, your NITP Site Analysis Report certificate "
+                    f"(#{application.certificate_number}) has been generated and sent to your email. "
+                    f"You can also download it from your account dashboard. "
+                    f"Thank you for using our services."
+                )
+                whatsapp_sent = send_whatsapp_notification(user.phone_number, message)
+                notification_status["whatsapp"] = whatsapp_sent
+        except Exception as e:
+            logger.error(f"WhatsApp notification error: {str(e)}")
         
         return certificate_path, qr_code_path, notification_status
         
