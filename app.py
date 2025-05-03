@@ -46,7 +46,7 @@ app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD")
 app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_DEFAULT_SENDER", "noreply@nitp-abuja.org")
 
 # Configure file uploads
-app.config["UPLOAD_FOLDER"] = "uploads"
+app.config["UPLOAD_FOLDER"] = os.path.join(app.static_folder, "uploads")
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB max upload
 
 # Initialize extensions with the app
@@ -57,9 +57,20 @@ mail.init_app(app)
 csrf.init_app(app)
 socketio.init_app(app, cors_allowed_origins="*")
 
-# Create upload folder if it doesn't exist
-if not os.path.exists(app.config["UPLOAD_FOLDER"]):
-    os.makedirs(app.config["UPLOAD_FOLDER"])
+# Create upload folders for different file types
+upload_folders = [
+    app.config["UPLOAD_FOLDER"],  # Base uploads folder
+    os.path.join(app.config["UPLOAD_FOLDER"], "sar_documents"),
+    os.path.join(app.config["UPLOAD_FOLDER"], "certificates"),
+    os.path.join(app.config["UPLOAD_FOLDER"], "qr_codes"),
+    os.path.join(app.config["UPLOAD_FOLDER"], "certificates", "qr_codes"),
+    os.path.join(app.config["UPLOAD_FOLDER"], "profile_documents"),
+]
+
+# Create all necessary folders
+for folder in upload_folders:
+    if not os.path.exists(folder):
+        os.makedirs(folder)
 
 # Import models (must be done after db initialization)
 with app.app_context():

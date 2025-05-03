@@ -257,28 +257,23 @@ def verify_payment():
         application.payment_status = PaymentStatus.COMPLETED
         application.status = SARStatus.PAYMENT_COMPLETED
         
-        # Generate certificate
-        certificate_number = f"NITP-SAR-{datetime.now().strftime('%Y')}-{uuid.uuid4().hex[:6].upper()}"
-        application.certificate_number = certificate_number
+        # Generate certificate with all notifications
+        certificate_path, qr_code_path, notification_status = generate_sar_certificate(application, current_user)
         
-        # Generate QR code with verification URL
-        verification_url = url_for('sar.verify', certificate_number=certificate_number, _external=True)
-        qr_code_path = generate_qr_code(verification_url)
-        application.qr_code_path = qr_code_path
-        
-        # Generate certificate
-        certificate_path = generate_sar_certificate(application, qr_code_path)
-        application.certificate_path = certificate_path
-        application.status = SARStatus.CERTIFICATE_GENERATED
-        
-        db.session.commit()
-        
-        # Send certificate to user via email and WhatsApp
-        send_sar_certificate(current_user.email, certificate_path, application)
-        if current_user.phone_number:
-            send_sar_certificate_whatsapp(current_user.phone_number, certificate_path, application)
-        
-        application.status = SARStatus.CERTIFICATE_DELIVERED
+        if certificate_path and qr_code_path:
+            # Update application status
+            application.status = SARStatus.CERTIFICATE_GENERATED
+            
+            # Check if notifications were sent successfully
+            if notification_status.get('email') or notification_status.get('sms') or notification_status.get('whatsapp'):
+                application.status = SARStatus.CERTIFICATE_DELIVERED
+                current_app.logger.info(f"Certificate delivery status: {notification_status}")
+            else:
+                current_app.logger.warning(f"No notifications were sent successfully: {notification_status}")
+        else:
+            # Log the error
+            current_app.logger.error(f"Certificate generation failed: {notification_status.get('error', 'Unknown error')}")
+            flash('Certificate generation encountered an issue. Please contact administrator.', 'warning')
         db.session.commit()
         
         # Log the action
@@ -287,7 +282,7 @@ def verify_payment():
             action="SAR payment completed and certificate generated",
             resource_type="SARApplication",
             resource_id=application.id,
-            details=f"Reference: {application.reference_number}, Certificate: {certificate_number}",
+            details=f"Reference: {application.reference_number}, Certificate: {application.certificate_number}",
             ip_address=request.remote_addr,
             user_agent=request.user_agent.string
         )
@@ -317,11 +312,20 @@ def certificate(application_id):
     
     # Serve the certificate file
     if application.certificate_path:
-        certificate_path = os.path.join(current_app.config['UPLOAD_FOLDER'], application.certificate_path)
-        return send_file(certificate_path, as_attachment=True)
+        try:
+            certificate_path = os.path.join(current_app.static_folder, 'uploads', application.certificate_path)
+            if os.path.exists(certificate_path):
+                return send_file(certificate_path, as_attachment=True)
+            else:
+                current_app.logger.error(f"Certificate file not found at {certificate_path}")
+                flash('Certificate file not found on server. Please contact administrator.', 'danger')
+        except Exception as e:
+            current_app.logger.error(f"Error serving certificate file: {str(e)}")
+            flash('Error accessing certificate file. Please try again later.', 'danger')
     else:
-        flash('Certificate file not found.', 'danger')
-        return redirect(url_for('sar.view', application_id=application.id))
+        flash('Certificate information is missing. Please contact administrator.', 'danger')
+    
+    return redirect(url_for('sar.view', application_id=application.id))
 
 @sar_bp.route('/verify')
 def verify():
