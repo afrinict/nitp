@@ -1,0 +1,181 @@
+Design a web application for the Nigeria Institute of Town Planners (NITP), Abuja Chapter, to manage member registration, annual subscriptions, and Site Analysis Report (SAR) applications. The application should be developed using Python and MySQL.
+
+Core Functionalities:
+
+Member Registration:
+
+Allow new members to register online.
+
+Collect the following information:
+
+Personal details (name, contact information, address, etc.).
+
+Educational qualifications:
+
+Secondary school leaving certificate (upload required).
+
+Higher Institution Certificate (HND or BSc) (upload required).
+
+Name of schools attended.
+
+Starting year.
+
+Year of graduation.
+
+Store all registration data in a MySQL database.
+
+Implement file upload functionality for certificates.
+
+Verify email addresses.
+
+Membership Subscription:
+
+Enable members to pay their annual subscriptions online.
+
+Track subscription status for each member.
+
+Restrict access to certain features (e.g., SAR application) for members with overdue subscriptions.
+
+Send automated subscription reminders.
+
+Integrate with a secure payment gateway (e.g., Paystack, Flutterwave)
+
+Site Analysis Report (SAR) Application:
+
+Allow eligible members (those with up-to-date subscriptions) to apply for SAR.
+
+Collect the following site information:
+
+Title document (upload required).
+
+Certificate of Occupancy (CofO) (upload required).
+
+Proof of ownership (upload required).
+
+Coordinate (Longitude and Latitude).
+
+Address of the site.
+
+Guide the user through the application process.
+
+Store SAR application data in the MySQL database.
+
+SAR Certificate Generation and Delivery:
+
+Upon successful payment and confirmation, automatically generate an SAR certificate.
+
+Include a QR code on the certificate for online, real-time verification.
+
+Deliver the certificate to the applicant via:
+
+WhatsApp.
+
+Email.
+
+QR Code Verification:
+
+Develop a system to verify the authenticity of SAR certificates using the QR code.
+
+The verification system should:
+
+Be accessible online.
+
+Display the SAR details associated with the QR code.
+
+Indicate the certificate's validity.
+
+Member Profile Management:
+
+Members should be able to update their profile information.
+
+Members should be able to view their subscription history.
+
+Members should be able to track the status of their SAR applications.
+
+Administrator Backend:
+
+Secure admin panel, accessible only to authorized personnel.
+
+Dashboard with key activity metrics and system overview.
+
+User management:
+
+Create, read, update, and delete user accounts.
+
+Role management:
+
+Define roles (e.g., Super Admin, Admin, Staff).
+
+Assign roles to users.
+
+Implement role-based access control (RBAC) to restrict access to specific functionalities.
+
+Manage member data, subscriptions, and SAR applications.
+
+Content management:
+
+Manage website content (announcements, news, events).
+
+Reporting:
+
+Generate reports on member activity, subscription status, SAR applications, and other relevant data.
+
+Audit trail:
+
+Log all admin activities for security and accountability.
+
+Chat room management:
+
+Administrator should be able to create chat rooms.
+
+Administrator should authorize users to create chat rooms.
+
+Chat Functionality
+
+Users should be able to create chat rooms, subject to authorization from the Administrator.
+
+Users can send direct messages to other users.
+
+Real-time messaging using websockets.
+
+Message history and search.
+
+File sharing within chat rooms and direct messages.
+
+Notifications for new messages.
+
+Technical Requirements:
+
+Programming Language: Python (e.g., using Django or Flask framework).
+
+Database: MySQL.
+
+Frontend: HTML, CSS, JavaScript (with a modern framework like React, Vue.js, or similar, preferred for a better user experience).
+
+Payment Gateway Integration: (e.g., Paystack, Flutterwave).
+
+QR Code Generation Library: (e.g., qrcode in Python).
+
+WhatsApp API Integration: (e.g., Twilio, Africa's Talking, or a local provider).
+
+Email Service Integration: (e.g., SendGrid, Mailgun).
+
+Websockets: (e.g., Django Channels, Socket.IO) for chat functionality.
+
+Security: Implement robust security measures to protect user data and prevent unauthorized access.
+
+Scalability: Design the application to be scalable to handle a growing number of members and SAR applications.
+
+User Experience: Ensure the application is user-friendly, intuitive, and accessible on various devices.
+
+Reporting: Generate reports for admin, such as member lists, subscription status, and SAR application statistics.
+
+Additional Considerations:
+
+Admin Panel: Use a framework like Django Admin, or create a custom admin interface.
+
+Notifications: Implement email and/or SMS notifications for important events (e.g., registration confirmation, payment confirmation, SAR certificate issuance, subscription reminders).
+
+Documentation: Provide comprehensive documentation for the application, including installation instructions, usage guidelines, and API documentation (if applicable).
+
+Hosting: Consider a suitable hosting platform (e.g., AWS, Google Cloud, Heroku).
