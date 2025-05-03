@@ -77,6 +77,65 @@ with app.app_context():
     import models
     db.create_all()
 
+# Function to initialize notification settings
+def init_notification_settings():
+    from models import NotificationSetting
+    
+    # Initialize notification settings if they don't exist
+    default_settings = [
+        {
+            'name': 'email_notifications',
+            'display_name': 'Email Notifications',
+            'description': 'Send notifications via email to members and administrators.',
+            'is_enabled': True,
+            'config_values': {}
+        },
+        {
+            'name': 'sms_notifications',
+            'display_name': 'SMS Notifications',
+            'description': 'Send notifications via SMS to members and administrators. Requires Twilio credentials.',
+            'is_enabled': False,
+            'config_values': {
+                'account_sid': '',
+                'auth_token': '',
+                'phone_number': ''
+            }
+        },
+        {
+            'name': 'whatsapp_notifications',
+            'display_name': 'WhatsApp Notifications',
+            'description': 'Send notifications via WhatsApp to members and administrators. Requires Twilio credentials.',
+            'is_enabled': False,
+            'config_values': {
+                'account_sid': '',
+                'auth_token': '',
+                'phone_number': ''
+            }
+        }
+    ]
+    
+    # Add default settings if they don't exist
+    for setting in default_settings:
+        existing = NotificationSetting.query.filter_by(name=setting['name']).first()
+        if not existing:
+            new_setting = NotificationSetting(
+                name=setting['name'],
+                display_name=setting['display_name'],
+                description=setting['description'],
+                is_enabled=setting['is_enabled'],
+                config_values=setting['config_values']
+            )
+            db.session.add(new_setting)
+    
+    # Commit changes
+    db.session.commit()
+
+# Initialize notification settings after all models are loaded
+with app.app_context():
+    # The import is needed to make sure all models are fully defined
+    from models import User, NotificationSetting
+    init_notification_settings()
+
 # Set up login manager
 from models import User
 

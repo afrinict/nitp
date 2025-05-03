@@ -56,9 +56,18 @@ class User(UserMixin, db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    profile = db.relationship('MemberProfile', backref='user', uselist=False)
-    subscriptions = db.relationship('Subscription', backref='user', lazy='dynamic')
-    sar_applications = db.relationship('SARApplication', backref='user', lazy='dynamic')
+    profile = db.relationship('MemberProfile', 
+                             foreign_keys='MemberProfile.user_id', 
+                             backref='user', 
+                             uselist=False)
+    subscriptions = db.relationship('Subscription', 
+                                  foreign_keys='Subscription.user_id',
+                                  backref='user', 
+                                  lazy='dynamic')
+    sar_applications = db.relationship('SARApplication', 
+                                     foreign_keys='SARApplication.user_id',
+                                     backref='user', 
+                                     lazy='dynamic')
     sent_messages = db.relationship('Message', 
                                    foreign_keys='Message.sender_id',
                                    backref='sender', 
@@ -70,7 +79,10 @@ class User(UserMixin, db.Model):
     chat_rooms = db.relationship('ChatRoom', 
                                 secondary='chat_room_members',
                                 backref=db.backref('members', lazy='dynamic'))
-    audit_logs = db.relationship('AuditLog', backref='user', lazy='dynamic')
+    audit_logs = db.relationship('AuditLog', 
+                                foreign_keys='AuditLog.user_id',
+                                backref='user', 
+                                lazy='dynamic')
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -191,7 +203,7 @@ class ChatMessage(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationship for sender
-    user = db.relationship('User')
+    user = db.relationship('User', foreign_keys=[user_id])
     
     def __repr__(self):
         return f'<ChatMessage {self.id}>'
@@ -231,7 +243,7 @@ class EmailVerification(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationship
-    user = db.relationship('User')
+    user = db.relationship('User', foreign_keys=[user_id])
 
 class NotificationSetting(db.Model):
     id = db.Column(db.Integer, primary_key=True)
