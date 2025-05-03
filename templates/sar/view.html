@@ -1,0 +1,316 @@
+{% extends 'layout.html' %}
+
+{% block title %}View SAR Application - NITP Abuja Chapter{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Navigation</h4>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{{ url_for('member.profile') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-user me-2"></i> Profile Overview
+                </a>
+                <a href="{{ url_for('subscription.index') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-credit-card me-2"></i> Subscription
+                </a>
+                <a href="{{ url_for('sar.index') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-clipboard-list me-2"></i> SAR Applications
+                </a>
+                <a href="{{ url_for('sar.apply') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-plus me-2"></i> New SAR Application
+                </a>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h4 class="mb-0">Application Status</h4>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush status-timeline">
+                    <li class="list-group-item 
+                        {% if application.status.value != 'draft' %}active-status{% endif %}">
+                        <i class="status-icon 
+                            {% if application.status.value != 'draft' %}fas fa-check-circle{% else %}far fa-circle{% endif %}"></i>
+                        <strong>Draft</strong>
+                    </li>
+                    <li class="list-group-item 
+                        {% if application.status.value not in ['draft'] %}active-status{% endif %}">
+                        <i class="status-icon 
+                            {% if application.status.value not in ['draft'] %}fas fa-check-circle{% else %}far fa-circle{% endif %}"></i>
+                        <strong>Submitted</strong>
+                    </li>
+                    <li class="list-group-item 
+                        {% if application.status.value in ['under_review', 'approved', 'payment_pending', 'payment_completed', 'certificate_generated', 'certificate_delivered'] %}active-status{% endif %}
+                        {% if application.status.value == 'rejected' %}rejected-status{% endif %}">
+                        <i class="status-icon 
+                            {% if application.status.value == 'under_review' %}fas fa-spinner fa-spin{% endif %}
+                            {% if application.status.value in ['approved', 'payment_pending', 'payment_completed', 'certificate_generated', 'certificate_delivered'] %}fas fa-check-circle{% endif %}
+                            {% if application.status.value == 'rejected' %}fas fa-times-circle{% endif %}
+                            {% if application.status.value in ['draft', 'submitted'] %}far fa-circle{% endif %}"></i>
+                        <strong>Under Review</strong>
+                    </li>
+                    <li class="list-group-item 
+                        {% if application.status.value in ['approved', 'payment_pending', 'payment_completed', 'certificate_generated', 'certificate_delivered'] %}active-status{% endif %}
+                        {% if application.status.value == 'rejected' %}rejected-status{% endif %}">
+                        <i class="status-icon 
+                            {% if application.status.value in ['approved', 'payment_pending', 'payment_completed', 'certificate_generated', 'certificate_delivered'] %}fas fa-check-circle{% endif %}
+                            {% if application.status.value == 'rejected' %}fas fa-times-circle{% endif %}
+                            {% if application.status.value in ['draft', 'submitted', 'under_review'] %}far fa-circle{% endif %}"></i>
+                        <strong>Approved</strong>
+                    </li>
+                    <li class="list-group-item 
+                        {% if application.status.value in ['payment_pending'] %}active-status current-status{% endif %}
+                        {% if application.status.value in ['payment_completed', 'certificate_generated', 'certificate_delivered'] %}active-status{% endif %}">
+                        <i class="status-icon 
+                            {% if application.status.value == 'payment_pending' %}fas fa-spinner fa-spin{% endif %}
+                            {% if application.status.value in ['payment_completed', 'certificate_generated', 'certificate_delivered'] %}fas fa-check-circle{% endif %}
+                            {% if application.status.value in ['draft', 'submitted', 'under_review', 'approved', 'rejected'] %}far fa-circle{% endif %}"></i>
+                        <strong>Payment</strong>
+                    </li>
+                    <li class="list-group-item 
+                        {% if application.status.value in ['certificate_generated', 'certificate_delivered'] %}active-status{% endif %}">
+                        <i class="status-icon 
+                            {% if application.status.value in ['certificate_generated', 'certificate_delivered'] %}fas fa-check-circle{% endif %}
+                            {% if application.status.value in ['draft', 'submitted', 'under_review', 'approved', 'payment_pending', 'payment_completed', 'rejected'] %}far fa-circle{% endif %}"></i>
+                        <strong>Certificate</strong>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">SAR Application Details</h3>
+                <div>
+                    {% if application.status.value == 'approved' %}
+                        <a href="{{ url_for('sar.payment', application_id=application.id) }}" class="btn btn-success">
+                            <i class="fas fa-credit-card me-1"></i> Make Payment
+                        </a>
+                    {% endif %}
+                    
+                    {% if application.status.value in ['certificate_generated', 'certificate_delivered'] %}
+                        <a href="{{ url_for('sar.certificate', application_id=application.id) }}" class="btn btn-primary">
+                            <i class="fas fa-download me-1"></i> Download Certificate
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5 class="border-bottom pb-2">Application Information</h5>
+                        <table class="table table-borderless">
+                            <tr>
+                                <th width="40%">Reference Number:</th>
+                                <td>{{ application.reference_number }}</td>
+                            </tr>
+                            <tr>
+                                <th>Date Submitted:</th>
+                                <td>{{ application.created_at.strftime('%d %B, %Y') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Last Updated:</th>
+                                <td>{{ application.updated_at.strftime('%d %B, %Y') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Status:</th>
+                                <td>
+                                    <span class="badge 
+                                        {% if application.status.value in ['certificate_generated', 'certificate_delivered'] %}
+                                            bg-success
+                                        {% elif application.status.value in ['under_review', 'submitted', 'approved'] %}
+                                            bg-primary
+                                        {% elif application.status.value in ['payment_pending', 'payment_completed'] %}
+                                            bg-warning
+                                        {% elif application.status.value == 'rejected' %}
+                                            bg-danger
+                                        {% else %}
+                                            bg-secondary
+                                        {% endif %}">
+                                        {{ application.status.value|capitalize|replace('_', ' ') }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% if application.status.value == 'rejected' and application.review_comments %}
+                                <tr>
+                                    <th>Rejection Reason:</th>
+                                    <td class="text-danger">{{ application.review_comments }}</td>
+                                </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5 class="border-bottom pb-2">Site Information</h5>
+                        <table class="table table-borderless">
+                            <tr>
+                                <th width="40%">Site Address:</th>
+                                <td>{{ application.site_address }}</td>
+                            </tr>
+                            <tr>
+                                <th>City:</th>
+                                <td>{{ application.city }}</td>
+                            </tr>
+                            <tr>
+                                <th>State:</th>
+                                <td>{{ application.state }}</td>
+                            </tr>
+                            <tr>
+                                <th>Coordinates:</th>
+                                <td>{{ application.latitude }}, {{ application.longitude }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <h5 class="border-bottom pb-2 mb-3">Uploaded Documents</h5>
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-file-alt fa-3x mb-3 text-primary"></i>
+                                <h5>Title Document</h5>
+                                <p class="mb-0">
+                                    {% if application.title_document_path %}
+                                        <span class="text-success"><i class="fas fa-check-circle me-1"></i> Uploaded</span>
+                                    {% else %}
+                                        <span class="text-danger"><i class="fas fa-times-circle me-1"></i> Not Uploaded</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-file-alt fa-3x mb-3 text-primary"></i>
+                                <h5>Certificate of Occupancy</h5>
+                                <p class="mb-0">
+                                    {% if application.cofo_document_path %}
+                                        <span class="text-success"><i class="fas fa-check-circle me-1"></i> Uploaded</span>
+                                    {% else %}
+                                        <span class="text-danger"><i class="fas fa-times-circle me-1"></i> Not Uploaded</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-file-alt fa-3x mb-3 text-primary"></i>
+                                <h5>Proof of Ownership</h5>
+                                <p class="mb-0">
+                                    {% if application.ownership_proof_path %}
+                                        <span class="text-success"><i class="fas fa-check-circle me-1"></i> Uploaded</span>
+                                    {% else %}
+                                        <span class="text-danger"><i class="fas fa-times-circle me-1"></i> Not Uploaded</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if application.status.value in ['payment_completed', 'certificate_generated', 'certificate_delivered'] %}
+                    <h5 class="border-bottom pb-2 mb-3">Payment Information</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th width="40%">Amount:</th>
+                                    <td>₦{{ application.payment_amount|int|format_number }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Payment Reference:</th>
+                                    <td>{{ application.payment_reference }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Payment Status:</th>
+                                    <td>
+                                        <span class="badge bg-success">
+                                            {{ application.payment_status.value|capitalize }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                {% if application.status.value in ['certificate_generated', 'certificate_delivered'] %}
+                    <h5 class="border-bottom pb-2 mb-3">Certificate Information</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th width="40%">Certificate Number:</th>
+                                    <td>{{ application.certificate_number }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Certificate Status:</th>
+                                    <td>
+                                        <span class="badge bg-success">Generated</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <p><i class="fas fa-info-circle me-1"></i> The certificate has been sent to your email and WhatsApp.</p>
+                                    <a href="{{ url_for('sar.certificate', application_id=application.id) }}" class="btn btn-primary">
+                                        <i class="fas fa-download me-1"></i> Download Certificate
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{{ url_for('sar.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Applications
+                    </a>
+                    
+                    {% if application.status.value == 'approved' %}
+                        <a href="{{ url_for('sar.payment', application_id=application.id) }}" class="btn btn-success">
+                            <i class="fas fa-credit-card me-1"></i> Make Payment
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-timeline .status-icon {
+        margin-right: 10px;
+        color: var(--bs-secondary);
+    }
+    
+    .status-timeline .active-status .status-icon {
+        color: var(--bs-success);
+    }
+    
+    .status-timeline .rejected-status .status-icon {
+        color: var(--bs-danger);
+    }
+    
+    .status-timeline .current-status {
+        font-weight: bold;
+        background-color: rgba(var(--bs-primary-rgb), 0.1);
+    }
+</style>
+{% endblock %}

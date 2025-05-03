@@ -1,0 +1,112 @@
+{% extends 'layout.html' %}
+
+{% block title %}Welcome to NITP Abuja Chapter{% endblock %}
+
+{% block content %}
+<div class="jumbotron p-5 mb-4 bg-body-tertiary rounded-3">
+    <div class="container-fluid">
+        <h1 class="display-4">Nigeria Institute of Town Planners</h1>
+        <h2 class="display-6 mb-4">Abuja Chapter</h2>
+        <p class="lead">Transforming cities, shaping futures - committed to sustainable urban development in Nigeria's capital.</p>
+        {% if not current_user.is_authenticated %}
+            <div class="mt-4">
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg me-2">
+                    <i class="fas fa-user-plus me-2"></i>Become a Member
+                </a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                </a>
+            </div>
+        {% else %}
+            <div class="mt-4">
+                <a href="{{ url_for('sar.apply') }}" class="btn btn-primary btn-lg me-2">
+                    <i class="fas fa-file-alt me-2"></i>Apply for SAR
+                </a>
+                <a href="{{ url_for('subscription.index') }}" class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-credit-card me-2"></i>Manage Subscription
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mb-5">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-user-plus fa-4x mb-3 text-primary"></i>
+                <h3 class="card-title">Membership</h3>
+                <p class="card-text">Join our community of professional town planners. Register online and submit your credentials for verification.</p>
+                {% if not current_user.is_authenticated %}
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary">Register Now</a>
+                {% else %}
+                    <a href="{{ url_for('member.profile') }}" class="btn btn-outline-primary">View Profile</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-credit-card fa-4x mb-3 text-success"></i>
+                <h3 class="card-title">Subscription</h3>
+                <p class="card-text">Pay your annual subscription online and enjoy all the benefits of being an active NITP member.</p>
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('subscription.index') }}" class="btn btn-outline-success">Manage Subscription</a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-success">Login to Subscribe</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-file-alt fa-4x mb-3 text-info"></i>
+                <h3 class="card-title">Site Analysis Report</h3>
+                <p class="card-text">Apply for Site Analysis Reports (SAR) online. Upload documents, make payments, and receive your certificate.</p>
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('sar.index') }}" class="btn btn-outline-info">SAR Applications</a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-info">Login to Apply</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">About NITP Abuja Chapter</h3>
+            </div>
+            <div class="card-body">
+                <p>The Nigeria Institute of Town Planners (NITP) Abuja Chapter is the professional body for town planners in Nigeria's Federal Capital Territory. We are dedicated to promoting sustainable urban development and enhancing the quality of life in our cities through effective planning.</p>
+                
+                <p>As a chapter, we work closely with government agencies, private sector organizations, and communities to ensure that development in Abuja follows best practices in urban planning and design.</p>
+                
+                <h4 class="mt-4">Our Services</h4>
+                <ul>
+                    <li><strong>Professional Membership:</strong> We provide professional recognition and accreditation for qualified town planners.</li>
+                    <li><strong>Continuing Education:</strong> We offer opportunities for professional development and lifelong learning.</li>
+                    <li><strong>Site Analysis Reports (SAR):</strong> We issue official SAR certificates that are recognized by government agencies and development authorities.</li>
+                    <li><strong>Advocacy:</strong> We advocate for sustainable urban planning policies and practices.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="mb-0">Verify SAR Certificate</h3>
+    </div>
+    <div class="card-body">
+        <p>Need to verify the authenticity of a Site Analysis Report (SAR) certificate? Use our online verification tool to confirm its validity.</p>
+        <a href="{{ url_for('sar.verify') }}" class="btn btn-primary">
+            <i class="fas fa-search me-2"></i>Verify Certificate
+        </a>
+    </div>
+</div>
+{% endblock %}

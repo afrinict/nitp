@@ -1,0 +1,210 @@
+{% extends 'layout.html' %}
+
+{% block title %}Apply for SAR - NITP Abuja Chapter{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Navigation</h4>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{{ url_for('member.profile') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-user me-2"></i> Profile Overview
+                </a>
+                <a href="{{ url_for('subscription.index') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-credit-card me-2"></i> Subscription
+                </a>
+                <a href="{{ url_for('sar.index') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-clipboard-list me-2"></i> SAR Applications
+                </a>
+                <a href="{{ url_for('sar.apply') }}" class="list-group-item list-group-item-action active">
+                    <i class="fas fa-plus me-2"></i> New SAR Application
+                </a>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h4 class="mb-0">Application Process</h4>
+            </div>
+            <div class="card-body">
+                <ol class="mb-0">
+                    <li class="mb-2">Submit application with required documents</li>
+                    <li class="mb-2">Application review by NITP</li>
+                    <li class="mb-2">Payment after approval</li>
+                    <li class="mb-2">Certificate generation</li>
+                    <li>Certificate delivery via email and WhatsApp</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">Site Analysis Report (SAR) Application</h3>
+            </div>
+            <div class="card-body">
+                {% if not current_user.has_active_subscription() %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Subscription Required:</strong> You need an active membership subscription to apply for Site Analysis Reports.
+                        <div class="mt-2">
+                            <a href="{{ url_for('subscription.index') }}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-credit-card me-1"></i> Pay Subscription
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <form method="POST" action="{{ url_for('sar.apply') }}" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        
+                        <h4 class="mb-3">Site Information</h4>
+                        <div class="mb-3">
+                            {{ form.site_address.label(class="form-label") }}
+                            {{ form.site_address(class="form-control", rows=3) }}
+                            {% for error in form.site_address.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.city.label(class="form-label") }}
+                                {{ form.city(class="form-control") }}
+                                {% for error in form.city.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.state.label(class="form-label") }}
+                                {{ form.state(class="form-control") }}
+                                {% for error in form.state.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                {{ form.longitude.label(class="form-label") }}
+                                {{ form.longitude(class="form-control", step="0.000001") }}
+                                {% for error in form.longitude.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                                <div class="form-text">Longitude value between -180 and 180</div>
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.latitude.label(class="form-label") }}
+                                {{ form.latitude(class="form-control", step="0.000001") }}
+                                {% for error in form.latitude.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                                <div class="form-text">Latitude value between -90 and 90</div>
+                            </div>
+                        </div>
+                        
+                        <h4 class="mb-3">Required Documents</h4>
+                        <div class="mb-3">
+                            {{ form.title_document.label(class="form-label") }}
+                            {{ form.title_document(class="form-control") }}
+                            {% for error in form.title_document.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                            <div class="form-text">Upload title document (PDF, JPG, PNG format, max 5MB)</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.cofo_document.label(class="form-label") }}
+                            {{ form.cofo_document(class="form-control") }}
+                            {% for error in form.cofo_document.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                            <div class="form-text">Upload Certificate of Occupancy (PDF, JPG, PNG format, max 5MB)</div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            {{ form.ownership_proof.label(class="form-label") }}
+                            {{ form.ownership_proof(class="form-control") }}
+                            {% for error in form.ownership_proof.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                            <div class="form-text">Upload proof of ownership (PDF, JPG, PNG format, max 5MB)</div>
+                        </div>
+                        
+                        <div class="alert alert-info mb-4">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Application Process:</strong>
+                            <ol class="mb-0 mt-2">
+                                <li>Your application will be reviewed by NITP staff after submission.</li>
+                                <li>Once approved, you will be notified to make payment.</li>
+                                <li>After payment, your SAR certificate will be generated and sent to you via email and WhatsApp.</li>
+                            </ol>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('sar.index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Back
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-1"></i> Submit Application
+                            </button>
+                        </div>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Get coordinates from browser
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if geolocation is supported
+        if (navigator.geolocation) {
+            const geoButton = document.createElement("button");
+            geoButton.innerHTML = '<i class="fas fa-map-marker-alt me-1"></i> Get Current Location';
+            geoButton.className = "btn btn-sm btn-outline-secondary mt-2";
+            geoButton.type = "button";
+            
+            // Insert button after longitude and latitude fields
+            const latitudeField = document.getElementById("latitude").parentNode;
+            latitudeField.appendChild(geoButton);
+            
+            geoButton.addEventListener("click", function(e) {
+                e.preventDefault();
+                
+                geoButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Getting Location...';
+                geoButton.disabled = true;
+                
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    document.getElementById("latitude").value = position.coords.latitude;
+                    document.getElementById("longitude").value = position.coords.longitude;
+                    
+                    geoButton.innerHTML = '<i class="fas fa-check me-1"></i> Location Updated';
+                    geoButton.className = "btn btn-sm btn-success mt-2";
+                    
+                    setTimeout(function() {
+                        geoButton.innerHTML = '<i class="fas fa-map-marker-alt me-1"></i> Get Current Location';
+                        geoButton.className = "btn btn-sm btn-outline-secondary mt-2";
+                        geoButton.disabled = false;
+                    }, 3000);
+                }, function(error) {
+                    geoButton.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> Error: ' + error.message;
+                    geoButton.className = "btn btn-sm btn-outline-danger mt-2";
+                    
+                    setTimeout(function() {
+                        geoButton.innerHTML = '<i class="fas fa-map-marker-alt me-1"></i> Get Current Location';
+                        geoButton.className = "btn btn-sm btn-outline-secondary mt-2";
+                        geoButton.disabled = false;
+                    }, 3000);
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

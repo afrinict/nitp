@@ -1,0 +1,425 @@
+{% extends 'layout.html' %}
+
+{% block title %}SAR Application Details - Admin - NITP Abuja Chapter{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Admin Navigation</h4>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{{ url_for('admin.index') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                </a>
+                <a href="{{ url_for('admin.members') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-users me-2"></i> Members
+                </a>
+                <a href="{{ url_for('admin.subscriptions') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-credit-card me-2"></i> Subscriptions
+                </a>
+                <a href="{{ url_for('admin.sar_applications') }}" class="list-group-item list-group-item-action active">
+                    <i class="fas fa-clipboard-list me-2"></i> SAR Applications
+                </a>
+                <a href="{{ url_for('admin.reports') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-chart-bar me-2"></i> Reports
+                </a>
+                <a href="{{ url_for('admin.chat_rooms') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-comments me-2"></i> Chat Rooms
+                </a>
+                <a href="{{ url_for('admin.audit_logs') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-history me-2"></i> Audit Logs
+                </a>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h4 class="mb-0">Application Status</h4>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush status-timeline">
+                    <li class="list-group-item 
+                        {% if application.status.value != 'draft' %}active-status{% endif %}">
+                        <i class="status-icon 
+                            {% if application.status.value != 'draft' %}fas fa-check-circle{% else %}far fa-circle{% endif %}"></i>
+                        <strong>Draft</strong>
+                    </li>
+                    <li class="list-group-item 
+                        {% if application.status.value not in ['draft'] %}active-status{% endif %}">
+                        <i class="status-icon 
+                            {% if application.status.value not in ['draft'] %}fas fa-check-circle{% else %}far fa-circle{% endif %}"></i>
+                        <strong>Submitted</strong>
+                    </li>
+                    <li class="list-group-item 
+                        {% if application.status.value in ['under_review', 'approved', 'payment_pending', 'payment_completed', 'certificate_generated', 'certificate_delivered'] %}active-status{% endif %}
+                        {% if application.status.value == 'rejected' %}rejected-status{% endif %}">
+                        <i class="status-icon 
+                            {% if application.status.value == 'under_review' %}fas fa-spinner fa-spin{% endif %}
+                            {% if application.status.value in ['approved', 'payment_pending', 'payment_completed', 'certificate_generated', 'certificate_delivered'] %}fas fa-check-circle{% endif %}
+                            {% if application.status.value == 'rejected' %}fas fa-times-circle{% endif %}
+                            {% if application.status.value in ['draft', 'submitted'] %}far fa-circle{% endif %}"></i>
+                        <strong>Under Review</strong>
+                    </li>
+                    <li class="list-group-item 
+                        {% if application.status.value in ['approved', 'payment_pending', 'payment_completed', 'certificate_generated', 'certificate_delivered'] %}active-status{% endif %}
+                        {% if application.status.value == 'rejected' %}rejected-status{% endif %}">
+                        <i class="status-icon 
+                            {% if application.status.value in ['approved', 'payment_pending', 'payment_completed', 'certificate_generated', 'certificate_delivered'] %}fas fa-check-circle{% endif %}
+                            {% if application.status.value == 'rejected' %}fas fa-times-circle{% endif %}
+                            {% if application.status.value in ['draft', 'submitted', 'under_review'] %}far fa-circle{% endif %}"></i>
+                        <strong>Approved</strong>
+                    </li>
+                    <li class="list-group-item 
+                        {% if application.status.value in ['payment_pending'] %}active-status current-status{% endif %}
+                        {% if application.status.value in ['payment_completed', 'certificate_generated', 'certificate_delivered'] %}active-status{% endif %}">
+                        <i class="status-icon 
+                            {% if application.status.value == 'payment_pending' %}fas fa-spinner fa-spin{% endif %}
+                            {% if application.status.value in ['payment_completed', 'certificate_generated', 'certificate_delivered'] %}fas fa-check-circle{% endif %}
+                            {% if application.status.value in ['draft', 'submitted', 'under_review', 'approved', 'rejected'] %}far fa-circle{% endif %}"></i>
+                        <strong>Payment</strong>
+                    </li>
+                    <li class="list-group-item 
+                        {% if application.status.value in ['certificate_generated', 'certificate_delivered'] %}active-status{% endif %}">
+                        <i class="status-icon 
+                            {% if application.status.value in ['certificate_generated', 'certificate_delivered'] %}fas fa-check-circle{% endif %}
+                            {% if application.status.value in ['draft', 'submitted', 'under_review', 'approved', 'payment_pending', 'payment_completed', 'rejected'] %}far fa-circle{% endif %}"></i>
+                        <strong>Certificate</strong>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">SAR Application Details</h3>
+                <div>
+                    {% if application.status.value in ['submitted', 'under_review'] %}
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                            <i class="fas fa-clipboard-check me-1"></i> Review Application
+                        </button>
+                    {% endif %}
+                    
+                    <a href="{{ url_for('admin.sar_applications') }}" class="btn btn-outline-secondary ms-2">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Applications
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5 class="border-bottom pb-2">Application Information</h5>
+                        <table class="table table-borderless">
+                            <tr>
+                                <th width="40%">Reference Number:</th>
+                                <td>{{ application.reference_number }}</td>
+                            </tr>
+                            <tr>
+                                <th>Member:</th>
+                                <td>
+                                    <a href="{{ url_for('admin.member_detail', user_id=user.id) }}">
+                                        {{ user.first_name }} {{ user.last_name }}
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Member Email:</th>
+                                <td>{{ user.email }}</td>
+                            </tr>
+                            <tr>
+                                <th>Member Phone:</th>
+                                <td>{{ user.phone_number }}</td>
+                            </tr>
+                            <tr>
+                                <th>Date Submitted:</th>
+                                <td>{{ application.created_at.strftime('%d %B, %Y') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Last Updated:</th>
+                                <td>{{ application.updated_at.strftime('%d %B, %Y') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Status:</th>
+                                <td>
+                                    <span class="badge 
+                                        {% if application.status.value in ['certificate_generated', 'certificate_delivered'] %}
+                                            bg-success
+                                        {% elif application.status.value in ['under_review', 'submitted', 'approved'] %}
+                                            bg-primary
+                                        {% elif application.status.value in ['payment_pending', 'payment_completed'] %}
+                                            bg-warning
+                                        {% elif application.status.value == 'rejected' %}
+                                            bg-danger
+                                        {% else %}
+                                            bg-secondary
+                                        {% endif %}">
+                                        {{ application.status.value|capitalize|replace('_', ' ') }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% if application.review_comments %}
+                                <tr>
+                                    <th>Review Comments:</th>
+                                    <td>{{ application.review_comments }}</td>
+                                </tr>
+                            {% endif %}
+                            {% if application.reviewer %}
+                                <tr>
+                                    <th>Reviewed By:</th>
+                                    <td>{{ application.reviewer.first_name }} {{ application.reviewer.last_name }}</td>
+                                </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5 class="border-bottom pb-2">Site Information</h5>
+                        <table class="table table-borderless">
+                            <tr>
+                                <th width="40%">Site Address:</th>
+                                <td>{{ application.site_address }}</td>
+                            </tr>
+                            <tr>
+                                <th>City:</th>
+                                <td>{{ application.city }}</td>
+                            </tr>
+                            <tr>
+                                <th>State:</th>
+                                <td>{{ application.state }}</td>
+                            </tr>
+                            <tr>
+                                <th>Coordinates:</th>
+                                <td>
+                                    {{ application.latitude }}, {{ application.longitude }}
+                                    <a href="https://www.google.com/maps?q={{ application.latitude }},{{ application.longitude }}" target="_blank" class="btn btn-sm btn-outline-primary ms-2">
+                                        <i class="fas fa-map-marker-alt me-1"></i> View on Map
+                                    </a>
+                                </td>
+                            </tr>
+                            {% if application.payment_amount %}
+                                <tr>
+                                    <th>Payment Amount:</th>
+                                    <td>₦{{ application.payment_amount|int|format_number }}</td>
+                                </tr>
+                            {% endif %}
+                            {% if application.certificate_number %}
+                                <tr>
+                                    <th>Certificate Number:</th>
+                                    <td>{{ application.certificate_number }}</td>
+                                </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+                
+                <h5 class="border-bottom pb-2 mb-3">Uploaded Documents</h5>
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">Title Document</h5>
+                            </div>
+                            <div class="card-body text-center">
+                                {% if application.title_document_path %}
+                                    <i class="fas fa-file-alt fa-3x mb-3 text-primary"></i>
+                                    <p>
+                                        <a href="{{ url_for('static', filename='uploads/' + application.title_document_path) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye me-1"></i> View Document
+                                        </a>
+                                    </p>
+                                {% else %}
+                                    <i class="fas fa-times-circle fa-3x mb-3 text-danger"></i>
+                                    <p class="text-danger">Document Not Uploaded</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">Certificate of Occupancy</h5>
+                            </div>
+                            <div class="card-body text-center">
+                                {% if application.cofo_document_path %}
+                                    <i class="fas fa-file-alt fa-3x mb-3 text-primary"></i>
+                                    <p>
+                                        <a href="{{ url_for('static', filename='uploads/' + application.cofo_document_path) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye me-1"></i> View Document
+                                        </a>
+                                    </p>
+                                {% else %}
+                                    <i class="fas fa-times-circle fa-3x mb-3 text-danger"></i>
+                                    <p class="text-danger">Document Not Uploaded</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">Proof of Ownership</h5>
+                            </div>
+                            <div class="card-body text-center">
+                                {% if application.ownership_proof_path %}
+                                    <i class="fas fa-file-alt fa-3x mb-3 text-primary"></i>
+                                    <p>
+                                        <a href="{{ url_for('static', filename='uploads/' + application.ownership_proof_path) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye me-1"></i> View Document
+                                        </a>
+                                    </p>
+                                {% else %}
+                                    <i class="fas fa-times-circle fa-3x mb-3 text-danger"></i>
+                                    <p class="text-danger">Document Not Uploaded</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if application.status.value in ['payment_completed', 'certificate_generated', 'certificate_delivered'] %}
+                    <h5 class="border-bottom pb-2 mb-3">Payment Information</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th width="40%">Amount:</th>
+                                    <td>₦{{ application.payment_amount|int|format_number }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Payment Reference:</th>
+                                    <td>{{ application.payment_reference }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Payment Status:</th>
+                                    <td>
+                                        <span class="badge bg-success">
+                                            {{ application.payment_status.value|capitalize }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                {% if application.status.value in ['certificate_generated', 'certificate_delivered'] %}
+                    <h5 class="border-bottom pb-2 mb-3">Certificate Information</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th width="40%">Certificate Number:</th>
+                                    <td>{{ application.certificate_number }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Certificate Status:</th>
+                                    <td>
+                                        <span class="badge bg-success">Generated</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>QR Code:</th>
+                                    <td>
+                                        {% if application.qr_code_path %}
+                                            <a href="{{ url_for('static', filename='uploads/' + application.qr_code_path) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-qrcode me-1"></i> View QR Code
+                                            </a>
+                                        {% else %}
+                                            <span class="text-danger">Not Generated</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-file-pdf fa-3x mb-3 text-primary"></i>
+                                    <p>Certificate has been generated and sent to the applicant.</p>
+                                    {% if application.certificate_path %}
+                                        <a href="{{ url_for('static', filename='uploads/' + application.certificate_path) }}" target="_blank" class="btn btn-primary">
+                                            <i class="fas fa-eye me-1"></i> View Certificate
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reviewModalLabel">Review SAR Application</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.review_sar_application', application_id=application.id) }}">
+                <div class="modal-body">
+                    {{ review_form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ review_form.status.label(class="form-label") }}
+                        {{ review_form.status(class="form-select") }}
+                        {% for error in review_form.status.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ review_form.comments.label(class="form-label") }}
+                        {{ review_form.comments(class="form-control", rows=3) }}
+                        {% for error in review_form.comments.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                        <div class="form-text">Please provide comments, especially if rejecting or requesting additional information.</div>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Review Process:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>If <strong>approved</strong>, the applicant will be notified to proceed with payment.</li>
+                            <li>If <strong>rejected</strong>, the applicant will be notified of the rejection reason.</li>
+                            <li>If set to <strong>under review</strong>, the application will remain in the review queue.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    {{ review_form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-timeline .status-icon {
+        margin-right: 10px;
+        color: var(--bs-secondary);
+    }
+    
+    .status-timeline .active-status .status-icon {
+        color: var(--bs-success);
+    }
+    
+    .status-timeline .rejected-status .status-icon {
+        color: var(--bs-danger);
+    }
+    
+    .status-timeline .current-status {
+        font-weight: bold;
+        background-color: rgba(var(--bs-primary-rgb), 0.1);
+    }
+</style>
+{% endblock %}

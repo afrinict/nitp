@@ -1,0 +1,224 @@
+{% extends 'layout.html' %}
+
+{% block title %}Subscription - NITP Abuja Chapter{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Navigation</h4>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{{ url_for('member.profile') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-user me-2"></i> Profile Overview
+                </a>
+                <a href="{{ url_for('subscription.index') }}" class="list-group-item list-group-item-action active">
+                    <i class="fas fa-credit-card me-2"></i> Subscription
+                </a>
+                <a href="{{ url_for('subscription.history') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-history me-2"></i> Subscription History
+                </a>
+                <a href="{{ url_for('sar.index') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-clipboard-list me-2"></i> SAR Applications
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="mb-0">Membership Subscription</h3>
+            </div>
+            <div class="card-body">
+                {% if active_subscription %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Active Subscription:</strong> Your membership subscription for {{ active_subscription.year }} is active.
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Subscription Details</h5>
+                            <table class="table">
+                                <tr>
+                                    <th>Year:</th>
+                                    <td>{{ active_subscription.year }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Amount Paid:</th>
+                                    <td>₦{{ active_subscription.amount|int|format_number }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Payment Date:</th>
+                                    <td>{{ active_subscription.payment_date.strftime('%d %B, %Y') }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Valid Until:</th>
+                                    <td>{{ active_subscription.end_date.strftime('%d %B, %Y') }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Status:</th>
+                                    <td><span class="badge bg-success">{{ active_subscription.status.value|capitalize }}</span></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-crown fa-4x mb-3 text-warning"></i>
+                                    <h4>Member Benefits</h4>
+                                    <ul class="list-group list-group-flush text-start mt-3">
+                                        <li class="list-group-item"><i class="fas fa-check text-success me-2"></i> Apply for Site Analysis Reports</li>
+                                        <li class="list-group-item"><i class="fas fa-check text-success me-2"></i> Access to members-only resources</li>
+                                        <li class="list-group-item"><i class="fas fa-check text-success me-2"></i> Participate in NITP events</li>
+                                        <li class="list-group-item"><i class="fas fa-check text-success me-2"></i> Professional networking</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Subscription Required:</strong> You need to pay your membership subscription for {{ current_year }} to access all member benefits.
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Annual Subscription</h5>
+                                </div>
+                                <div class="card-body">
+                                    <h2 class="text-center mb-3">₦{{ subscription_fee|int|format_number }}</h2>
+                                    <p class="text-center text-muted mb-4">For the year {{ current_year }}</p>
+                                    
+                                    <ul class="list-group list-group-flush mb-4">
+                                        <li class="list-group-item"><i class="fas fa-check text-success me-2"></i> 1 year membership</li>
+                                        <li class="list-group-item"><i class="fas fa-check text-success me-2"></i> Apply for Site Analysis Reports</li>
+                                        <li class="list-group-item"><i class="fas fa-check text-success me-2"></i> Access to members-only resources</li>
+                                        <li class="list-group-item"><i class="fas fa-check text-success me-2"></i> Participate in NITP events</li>
+                                    </ul>
+                                    
+                                    <div class="d-grid">
+                                        <a href="{{ url_for('subscription.payment', year=current_year) }}" class="btn btn-primary">
+                                            <i class="fas fa-credit-card me-1"></i> Pay Now
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Why Subscribe?</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>Your annual subscription supports the activities of the NITP Abuja Chapter and provides you with the following benefits:</p>
+                                    
+                                    <ul>
+                                        <li>Official recognition as a professional town planner</li>
+                                        <li>Ability to apply for Site Analysis Reports</li>
+                                        <li>Access to professional development opportunities</li>
+                                        <li>Networking with fellow professionals</li>
+                                        <li>Support for advocacy and policy development</li>
+                                    </ul>
+                                    
+                                    <div class="alert alert-info mt-3">
+                                        <i class="fas fa-info-circle me-2"></i> Payment can be made securely online using various payment methods.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">Recent Subscription History</h3>
+            </div>
+            <div class="card-body">
+                {% if subscription_history %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Year</th>
+                                    <th>Amount</th>
+                                    <th>Payment Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subscription in subscription_history[:5] %}
+                                    <tr>
+                                        <td>{{ subscription.year }}</td>
+                                        <td>₦{{ subscription.amount|int|format_number }}</td>
+                                        <td>
+                                            {% if subscription.payment_date %}
+                                                {{ subscription.payment_date.strftime('%d %B, %Y') }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if subscription.status.value == 'active' %}
+                                                    bg-success
+                                                {% elif subscription.status.value == 'pending' %}
+                                                    bg-warning
+                                                {% else %}
+                                                    bg-danger
+                                                {% endif %}">
+                                                {{ subscription.status.value|capitalize }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if subscription.status.value == 'active' %}
+                                                <a href="{{ url_for('subscription.receipt', subscription_id=subscription.id) }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-file-alt me-1"></i> Receipt
+                                                </a>
+                                            {% elif subscription.status.value == 'pending' %}
+                                                <a href="{{ url_for('subscription.payment', year=subscription.year) }}" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-credit-card me-1"></i> Pay
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('subscription.history') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-history me-1"></i> View Full History
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-history fa-4x mb-3 text-muted"></i>
+                        <h5>No Subscription History</h5>
+                        <p>You don't have any subscription records yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Format numbers with commas
+    document.addEventListener('DOMContentLoaded', function() {
+        // This is handled server-side with the format_number filter
+    });
+</script>
+{% endblock %}

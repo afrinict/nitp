@@ -1,0 +1,244 @@
+{% extends 'layout.html' %}
+
+{% block title %}My Profile - NITP Abuja Chapter{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Navigation</h4>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{{ url_for('member.profile') }}" class="list-group-item list-group-item-action active">
+                    <i class="fas fa-user me-2"></i> Profile Overview
+                </a>
+                <a href="{{ url_for('member.edit_profile') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-edit me-2"></i> Edit Profile
+                </a>
+                <a href="{{ url_for('member.education') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-graduation-cap me-2"></i> Educational Info
+                </a>
+                <a href="{{ url_for('member.documents') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-file-alt me-2"></i> Documents
+                </a>
+                <a href="{{ url_for('subscription.index') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-credit-card me-2"></i> Subscription
+                </a>
+                <a href="{{ url_for('sar.index') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-clipboard-list me-2"></i> SAR Applications
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">Member Profile</h3>
+                <a href="{{ url_for('member.edit_profile') }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-edit me-1"></i> Edit
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-4 mb-md-0">
+                        <div class="avatar-circle">
+                            <span class="initials">{{ current_user.first_name[0] }}{{ current_user.last_name[0] }}</span>
+                        </div>
+                        <h4 class="mt-3">{{ current_user.first_name }} {{ current_user.last_name }}</h4>
+                        <p class="text-muted">@{{ current_user.username }}</p>
+                        
+                        {% if current_user.has_active_subscription() %}
+                            <span class="badge bg-success">Active Member</span>
+                        {% else %}
+                            <span class="badge bg-warning">Subscription Required</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-8">
+                        <h5 class="border-bottom pb-2">Personal Information</h5>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 fw-bold">Email:</div>
+                            <div class="col-sm-8">{{ current_user.email }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 fw-bold">Phone:</div>
+                            <div class="col-sm-8">{{ current_user.phone_number }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 fw-bold">Address:</div>
+                            <div class="col-sm-8">{{ current_user.address }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 fw-bold">City:</div>
+                            <div class="col-sm-8">{{ current_user.city }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 fw-bold">State:</div>
+                            <div class="col-sm-8">{{ current_user.state }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 fw-bold">Member Since:</div>
+                            <div class="col-sm-8">{{ current_user.created_at.strftime('%d %B, %Y') }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">Educational Information</h3>
+                <a href="{{ url_for('member.education') }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-edit me-1"></i> Edit
+                </a>
+            </div>
+            <div class="card-body">
+                {% if profile %}
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5 class="border-bottom pb-2">Secondary Education</h5>
+                            <div class="row mb-2">
+                                <div class="col-sm-5 fw-bold">School:</div>
+                                <div class="col-sm-7">{{ profile.secondary_school }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-5 fw-bold">Duration:</div>
+                                <div class="col-sm-7">{{ profile.secondary_school_start_year }} - {{ profile.secondary_school_end_year }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-5 fw-bold">Certificate:</div>
+                                <div class="col-sm-7">
+                                    {% if profile.secondary_school_cert_path %}
+                                        <span class="text-success"><i class="fas fa-check-circle me-1"></i> Uploaded</span>
+                                    {% else %}
+                                        <span class="text-danger"><i class="fas fa-times-circle me-1"></i> Not Uploaded</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5 class="border-bottom pb-2">Higher Education</h5>
+                            <div class="row mb-2">
+                                <div class="col-sm-5 fw-bold">Institution:</div>
+                                <div class="col-sm-7">{{ profile.higher_institution }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-5 fw-bold">Duration:</div>
+                                <div class="col-sm-7">{{ profile.higher_institution_start_year }} - {{ profile.higher_institution_end_year }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-5 fw-bold">Degree Type:</div>
+                                <div class="col-sm-7">{{ profile.degree_type }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-5 fw-bold">Certificate:</div>
+                                <div class="col-sm-7">
+                                    {% if profile.higher_institution_cert_path %}
+                                        <span class="text-success"><i class="fas fa-check-circle me-1"></i> Uploaded</span>
+                                    {% else %}
+                                        <span class="text-danger"><i class="fas fa-times-circle me-1"></i> Not Uploaded</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert 
+                        {% if profile.verification_status.value == 'verified' %}
+                            alert-success
+                        {% elif profile.verification_status.value == 'rejected' %}
+                            alert-danger
+                        {% else %}
+                            alert-warning
+                        {% endif %}">
+                        <i class="fas 
+                            {% if profile.verification_status.value == 'verified' %}
+                                fa-check-circle
+                            {% elif profile.verification_status.value == 'rejected' %}
+                                fa-times-circle
+                            {% else %}
+                                fa-clock
+                            {% endif %} me-2"></i>
+                        <strong>Verification Status:</strong> 
+                        {{ profile.verification_status.value|capitalize }}
+                        
+                        {% if profile.verification_status.value == 'pending' %}
+                            <p class="mb-0 mt-2">Your educational information is currently under review. You will be notified once the verification process is complete.</p>
+                        {% elif profile.verification_status.value == 'rejected' %}
+                            <p class="mb-0 mt-2">Your educational information verification was rejected. Please review the comments below and update your information.</p>
+                            {% if profile.comments %}
+                                <p class="mb-0 mt-2"><strong>Comments:</strong> {{ profile.comments }}</p>
+                            {% endif %}
+                        {% elif profile.verification_status.value == 'verified' %}
+                            <p class="mb-0 mt-2">Your educational information has been verified successfully.</p>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-graduation-cap fa-4x mb-3 text-muted"></i>
+                        <h5>No Educational Information</h5>
+                        <p>You haven't provided your educational information yet.</p>
+                        <a href="{{ url_for('member.education') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i> Add Educational Information
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">Subscription Status</h3>
+            </div>
+            <div class="card-body">
+                {% if current_user.has_active_subscription() %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Active Subscription:</strong> Your membership is currently active.
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Subscription Required:</strong> You need to pay your subscription to access all member features.
+                    </div>
+                    <div class="text-center">
+                        <a href="{{ url_for('subscription.index') }}" class="btn btn-primary">
+                            <i class="fas fa-credit-card me-1"></i> Pay Subscription
+                        </a>
+                    </div>
+                {% endif %}
+                
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('subscription.history') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-history me-1"></i> View Subscription History
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .avatar-circle {
+        width: 120px;
+        height: 120px;
+        background-color: var(--bs-primary);
+        text-align: center;
+        border-radius: 50%;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .initials {
+        font-size: 50px;
+        color: white;
+        text-transform: uppercase;
+    }
+</style>
+{% endblock %}

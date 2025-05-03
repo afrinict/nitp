@@ -1,0 +1,95 @@
+{% extends 'layout.html' %}
+
+{% block title %}SAR Payment - NITP Abuja Chapter{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">SAR Application Payment</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    You are about to pay for your Site Analysis Report (SAR) application with reference number <strong>{{ application.reference_number }}</strong>.
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5>Payment Details</h5>
+                        <table class="table">
+                            <tr>
+                                <th>Reference Number:</th>
+                                <td>{{ application.reference_number }}</td>
+                            </tr>
+                            <tr>
+                                <th>Amount:</th>
+                                <td>₦{{ application.payment_amount|int|format_number }}</td>
+                            </tr>
+                            <tr>
+                                <th>Site Address:</th>
+                                <td>{{ application.site_address }}</td>
+                            </tr>
+                            <tr>
+                                <th>Member Name:</th>
+                                <td>{{ current_user.first_name }} {{ current_user.last_name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Email:</th>
+                                <td>{{ current_user.email }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-file-alt fa-4x mb-3 text-primary"></i>
+                                <h4>SAR Certificate Benefits</h4>
+                                <ul class="list-group list-group-flush text-start mt-3">
+                                    <li class="list-group-item"><i class="fas fa-check text-success me-2"></i> Official NITP certification</li>
+                                    <li class="list-group-item"><i class="fas fa-check text-success me-2"></i> QR code verification system</li>
+                                    <li class="list-group-item"><i class="fas fa-check text-success me-2"></i> Recognition by government agencies</li>
+                                    <li class="list-group-item"><i class="fas fa-check text-success me-2"></i> Delivery via email and WhatsApp</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="POST" action="{{ url_for('sar.payment', application_id=application.id) }}" id="payment-form">
+                    {{ form.hidden_tag() }}
+                    {{ form.application_id }}
+                    {{ form.amount }}
+                    {{ form.reference }}
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-credit-card me-2"></i>
+                        <strong>Payment Information:</strong> You will be redirected to our secure payment gateway to complete your transaction.
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('sar.view', application_id=application.id) }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Back
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="payment-button">
+                            <i class="fas fa-credit-card me-1"></i> Proceed to Payment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/payment.js') }}"></script>
+<script>
+    document.getElementById('payment-form').addEventListener('submit', function() {
+        // Display loading indicator
+        document.getElementById('payment-button').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processing...';
+        document.getElementById('payment-button').disabled = true;
+    });
+</script>
+{% endblock %}

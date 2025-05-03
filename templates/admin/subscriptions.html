@@ -1,0 +1,182 @@
+{% extends 'layout.html' %}
+
+{% block title %}Subscriptions - Admin - NITP Abuja Chapter{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Admin Navigation</h4>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{{ url_for('admin.index') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                </a>
+                <a href="{{ url_for('admin.members') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-users me-2"></i> Members
+                </a>
+                <a href="{{ url_for('admin.subscriptions') }}" class="list-group-item list-group-item-action active">
+                    <i class="fas fa-credit-card me-2"></i> Subscriptions
+                </a>
+                <a href="{{ url_for('admin.sar_applications') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-clipboard-list me-2"></i> SAR Applications
+                </a>
+                <a href="{{ url_for('admin.reports') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-chart-bar me-2"></i> Reports
+                </a>
+                <a href="{{ url_for('admin.chat_rooms') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-comments me-2"></i> Chat Rooms
+                </a>
+                <a href="{{ url_for('admin.audit_logs') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-history me-2"></i> Audit Logs
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">Subscriptions</h3>
+                <div>
+                    <form class="d-flex" action="{{ url_for('admin.subscriptions') }}" method="get">
+                        <select name="status" class="form-select me-2" style="width: 150px;">
+                            <option value="">All Statuses</option>
+                            {% for s in statuses %}
+                                <option value="{{ s }}" {% if status == s %}selected{% endif %}>{{ s|capitalize }}</option>
+                            {% endfor %}
+                        </select>
+                        <select name="year" class="form-select me-2" style="width: 100px;">
+                            <option value="">All Years</option>
+                            {% for y in years %}
+                                <option value="{{ y }}" {% if year == y %}selected{% endif %}>{{ y }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if subscriptions.items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Member</th>
+                                    <th>Year</th>
+                                    <th>Amount</th>
+                                    <th>Payment Date</th>
+                                    <th>Valid Until</th>
+                                    <th>Status</th>
+                                    <th>Reference</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sub in subscriptions.items %}
+                                    <tr>
+                                        <td>{{ sub.id }}</td>
+                                        <td>
+                                            <a href="{{ url_for('admin.member_detail', user_id=sub.user_id) }}">
+                                                {% set member = User.query.get(sub.user_id) %}
+                                                {% if member %}
+                                                    {{ member.first_name }} {{ member.last_name }}
+                                                {% else %}
+                                                    Unknown Member
+                                                {% endif %}
+                                            </a>
+                                        </td>
+                                        <td>{{ sub.year }}</td>
+                                        <td>₦{{ sub.amount|int|format_number }}</td>
+                                        <td>
+                                            {% if sub.payment_date %}
+                                                {{ sub.payment_date.strftime('%d %b, %Y') }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if sub.end_date %}
+                                                {{ sub.end_date.strftime('%d %b, %Y') }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if sub.status.value == 'active' %}
+                                                    bg-success
+                                                {% elif sub.status.value == 'pending' %}
+                                                    bg-warning
+                                                {% else %}
+                                                    bg-danger
+                                                {% endif %}">
+                                                {{ sub.status.value|capitalize }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ sub.payment_reference }}</small>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <nav aria-label="Subscription pagination">
+                        <ul class="pagination justify-content-center">
+                            {% if subscriptions.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('admin.subscriptions', page=subscriptions.prev_num, status=status, year=year) }}">Previous</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">Previous</span>
+                                </li>
+                            {% endif %}
+                            
+                            {% for page_num in subscriptions.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                                {% if page_num %}
+                                    {% if page_num == subscriptions.page %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('admin.subscriptions', page=page_num, status=status, year=year) }}">{{ page_num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">…</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if subscriptions.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('admin.subscriptions', page=subscriptions.next_num, status=status, year=year) }}">Next</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">Next</span>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-credit-card fa-4x mb-3 text-muted"></i>
+                        <h5>No Subscriptions Found</h5>
+                        <p>No subscriptions match your filter criteria.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

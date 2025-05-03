@@ -1,0 +1,129 @@
+{% extends 'layout.html' %}
+
+{% block title %}SAR Applications - NITP Abuja Chapter{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Navigation</h4>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{{ url_for('member.profile') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-user me-2"></i> Profile Overview
+                </a>
+                <a href="{{ url_for('subscription.index') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-credit-card me-2"></i> Subscription
+                </a>
+                <a href="{{ url_for('sar.index') }}" class="list-group-item list-group-item-action active">
+                    <i class="fas fa-clipboard-list me-2"></i> SAR Applications
+                </a>
+                <a href="{{ url_for('sar.apply') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-plus me-2"></i> New SAR Application
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">Site Analysis Report (SAR) Applications</h3>
+                {% if current_user.has_active_subscription() %}
+                    <a href="{{ url_for('sar.apply') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i> New Application
+                    </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if not current_user.has_active_subscription() %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Subscription Required:</strong> You need an active membership subscription to apply for Site Analysis Reports.
+                        <div class="mt-2">
+                            <a href="{{ url_for('subscription.index') }}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-credit-card me-1"></i> Pay Subscription
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                {% if applications %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Reference</th>
+                                    <th>Site Address</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for app in applications %}
+                                    <tr>
+                                        <td>{{ app.reference_number }}</td>
+                                        <td>{{ app.site_address[:30] }}{% if app.site_address|length > 30 %}...{% endif %}</td>
+                                        <td>{{ app.created_at.strftime('%d %b, %Y') }}</td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if app.status.value in ['certificate_generated', 'certificate_delivered'] %}
+                                                    bg-success
+                                                {% elif app.status.value in ['under_review', 'submitted', 'approved'] %}
+                                                    bg-primary
+                                                {% elif app.status.value in ['payment_pending', 'payment_completed'] %}
+                                                    bg-warning
+                                                {% elif app.status.value == 'rejected' %}
+                                                    bg-danger
+                                                {% else %}
+                                                    bg-secondary
+                                                {% endif %}">
+                                                {{ app.status.value|capitalize|replace('_', ' ') }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('sar.view', application_id=app.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye me-1"></i> View
+                                            </a>
+                                            
+                                            {% if app.status.value == 'approved' %}
+                                                <a href="{{ url_for('sar.payment', application_id=app.id) }}" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-credit-card me-1"></i> Pay
+                                                </a>
+                                            {% endif %}
+                                            
+                                            {% if app.status.value in ['certificate_generated', 'certificate_delivered'] %}
+                                                <a href="{{ url_for('sar.certificate', application_id=app.id) }}" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-file-alt me-1"></i> Certificate
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-clipboard-list fa-4x mb-3 text-muted"></i>
+                        <h5>No SAR Applications Found</h5>
+                        <p>You haven't submitted any Site Analysis Report applications yet.</p>
+                        
+                        {% if current_user.has_active_subscription() %}
+                            <a href="{{ url_for('sar.apply') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i> Start New Application
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('subscription.index') }}" class="btn btn-primary">
+                                <i class="fas fa-credit-card me-1"></i> Pay Subscription to Apply
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

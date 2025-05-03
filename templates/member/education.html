@@ -1,0 +1,181 @@
+{% extends 'layout.html' %}
+
+{% block title %}Educational Information - NITP Abuja Chapter{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Navigation</h4>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{{ url_for('member.profile') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-user me-2"></i> Profile Overview
+                </a>
+                <a href="{{ url_for('member.edit_profile') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-edit me-2"></i> Edit Profile
+                </a>
+                <a href="{{ url_for('member.education') }}" class="list-group-item list-group-item-action active">
+                    <i class="fas fa-graduation-cap me-2"></i> Educational Info
+                </a>
+                <a href="{{ url_for('member.documents') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-file-alt me-2"></i> Documents
+                </a>
+                <a href="{{ url_for('subscription.index') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-credit-card me-2"></i> Subscription
+                </a>
+                <a href="{{ url_for('sar.index') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-clipboard-list me-2"></i> SAR Applications
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">Educational Information</h3>
+            </div>
+            <div class="card-body">
+                {% if profile and profile.verification_status.value != 'pending' %}
+                    <div class="alert 
+                        {% if profile.verification_status.value == 'verified' %}
+                            alert-success
+                        {% elif profile.verification_status.value == 'rejected' %}
+                            alert-danger
+                        {% endif %}">
+                        <i class="fas 
+                            {% if profile.verification_status.value == 'verified' %}
+                                fa-check-circle
+                            {% elif profile.verification_status.value == 'rejected' %}
+                                fa-times-circle
+                            {% endif %} me-2"></i>
+                        <strong>Verification Status:</strong> 
+                        {{ profile.verification_status.value|capitalize }}
+                        
+                        {% if profile.verification_status.value == 'rejected' %}
+                            <p class="mb-0 mt-2">Your educational information verification was rejected. Please review the comments below and update your information.</p>
+                            {% if profile.comments %}
+                                <p class="mb-0 mt-2"><strong>Comments:</strong> {{ profile.comments }}</p>
+                            {% endif %}
+                        {% elif profile.verification_status.value == 'verified' %}
+                            <p class="mb-0 mt-2">Your educational information has been verified successfully.</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                
+                <form method="POST" action="{{ url_for('member.education') }}" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    
+                    <h4 class="mt-3 mb-3">Secondary Education</h4>
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            {{ form.secondary_school.label(class="form-label") }}
+                            {{ form.secondary_school(class="form-control") }}
+                            {% for error in form.secondary_school.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.secondary_school_start_year.label(class="form-label") }}
+                            {{ form.secondary_school_start_year(class="form-control") }}
+                            {% for error in form.secondary_school_start_year.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.secondary_school_end_year.label(class="form-label") }}
+                            {{ form.secondary_school_end_year(class="form-control") }}
+                            {% for error in form.secondary_school_end_year.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        {{ form.secondary_school_cert.label(class="form-label") }}
+                        {{ form.secondary_school_cert(class="form-control") }}
+                        {% for error in form.secondary_school_cert.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                        
+                        {% if profile and profile.secondary_school_cert_path %}
+                            <div class="mt-2">
+                                <span class="text-success">
+                                    <i class="fas fa-check-circle me-1"></i> Certificate already uploaded
+                                </span>
+                                <small class="d-block text-muted">Upload a new file to replace the existing one.</small>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <h4 class="mt-4 mb-3">Higher Education</h4>
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            {{ form.higher_institution.label(class="form-label") }}
+                            {{ form.higher_institution(class="form-control") }}
+                            {% for error in form.higher_institution.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.higher_institution_start_year.label(class="form-label") }}
+                            {{ form.higher_institution_start_year(class="form-control") }}
+                            {% for error in form.higher_institution_start_year.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.higher_institution_end_year.label(class="form-label") }}
+                            {{ form.higher_institution_end_year(class="form-control") }}
+                            {% for error in form.higher_institution_end_year.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.degree_type.label(class="form-label") }}
+                        {{ form.degree_type(class="form-select") }}
+                        {% for error in form.degree_type.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        {{ form.higher_institution_cert.label(class="form-label") }}
+                        {{ form.higher_institution_cert(class="form-control") }}
+                        {% for error in form.higher_institution_cert.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                        
+                        {% if profile and profile.higher_institution_cert_path %}
+                            <div class="mt-2">
+                                <span class="text-success">
+                                    <i class="fas fa-check-circle me-1"></i> Certificate already uploaded
+                                </span>
+                                <small class="d-block text-muted">Upload a new file to replace the existing one.</small>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> Note: Updating your educational information or certificates will reset the verification status. Your information will need to be verified again by administrators.
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

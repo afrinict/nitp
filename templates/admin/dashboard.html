@@ -1,0 +1,213 @@
+{% extends 'layout.html' %}
+
+{% block title %}Admin Dashboard - NITP Abuja Chapter{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Admin Navigation</h4>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{{ url_for('admin.index') }}" class="list-group-item list-group-item-action active">
+                    <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                </a>
+                <a href="{{ url_for('admin.members') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-users me-2"></i> Members
+                </a>
+                <a href="{{ url_for('admin.subscriptions') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-credit-card me-2"></i> Subscriptions
+                </a>
+                <a href="{{ url_for('admin.sar_applications') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-clipboard-list me-2"></i> SAR Applications
+                </a>
+                <a href="{{ url_for('admin.reports') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-chart-bar me-2"></i> Reports
+                </a>
+                <a href="{{ url_for('admin.chat_rooms') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-comments me-2"></i> Chat Rooms
+                </a>
+                <a href="{{ url_for('admin.audit_logs') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-history me-2"></i> Audit Logs
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="mb-0">Dashboard</h3>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-primary text-white h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0">Total Members</h6>
+                                        <h2 class="mb-0">{{ total_members }}</h2>
+                                    </div>
+                                    <i class="fas fa-users fa-2x"></i>
+                                </div>
+                            </div>
+                            <div class="card-footer d-flex align-items-center justify-content-between">
+                                <a href="{{ url_for('admin.members') }}" class="text-white">View Details</a>
+                                <i class="fas fa-angle-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-warning text-white h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0">Pending Verifications</h6>
+                                        <h2 class="mb-0">{{ pending_verifications }}</h2>
+                                    </div>
+                                    <i class="fas fa-user-check fa-2x"></i>
+                                </div>
+                            </div>
+                            <div class="card-footer d-flex align-items-center justify-content-between">
+                                <a href="{{ url_for('admin.members') }}?status=pending" class="text-white">View Details</a>
+                                <i class="fas fa-angle-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-success text-white h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0">Active Subscriptions</h6>
+                                        <h2 class="mb-0">{{ active_subscriptions }}</h2>
+                                    </div>
+                                    <i class="fas fa-credit-card fa-2x"></i>
+                                </div>
+                            </div>
+                            <div class="card-footer d-flex align-items-center justify-content-between">
+                                <a href="{{ url_for('admin.subscriptions') }}?status=active" class="text-white">View Details</a>
+                                <i class="fas fa-angle-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-info text-white h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0">Pending SAR Applications</h6>
+                                        <h2 class="mb-0">{{ pending_sar_applications }}</h2>
+                                    </div>
+                                    <i class="fas fa-clipboard-list fa-2x"></i>
+                                </div>
+                            </div>
+                            <div class="card-footer d-flex align-items-center justify-content-between">
+                                <a href="{{ url_for('admin.sar_applications') }}?status=submitted" class="text-white">View Details</a>
+                                <i class="fas fa-angle-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-8 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">Monthly Subscriptions</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="subscriptionChart" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">Recent Activity</h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <ul class="list-group list-group-flush">
+                                    {% for user in recent_registrations %}
+                                        <li class="list-group-item">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <i class="fas fa-user-plus text-success me-2"></i>
+                                                    <a href="{{ url_for('admin.member_detail', user_id=user.id) }}">{{ user.first_name }} {{ user.last_name }}</a> joined
+                                                </div>
+                                                <small class="text-muted">{{ user.created_at.strftime('%d %b') }}</small>
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                    
+                                    {% for app in recent_sar_applications %}
+                                        <li class="list-group-item">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <i class="fas fa-file-alt text-info me-2"></i>
+                                                    <a href="{{ url_for('admin.sar_application_detail', application_id=app.id) }}">New SAR application</a>
+                                                </div>
+                                                <small class="text-muted">{{ app.created_at.strftime('%d %b') }}</small>
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Subscription chart
+    document.addEventListener('DOMContentLoaded', function() {
+        var ctx = document.getElementById('subscriptionChart').getContext('2d');
+        var subscriptionData = {{ subscription_data|tojson }};
+        
+        var months = subscriptionData.map(function(item) {
+            return item.month;
+        });
+        
+        var counts = subscriptionData.map(function(item) {
+            return item.count;
+        });
+        
+        var chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: 'New Subscriptions',
+                    data: counts,
+                    backgroundColor: 'rgba(13, 110, 253, 0.7)',
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

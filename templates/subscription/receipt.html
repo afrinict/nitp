@@ -1,0 +1,139 @@
+{% extends 'layout.html' %}
+
+{% block title %}Subscription Receipt - NITP Abuja Chapter{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">Subscription Receipt</h3>
+                <button class="btn btn-sm btn-outline-secondary" onclick="window.print()">
+                    <i class="fas fa-print me-1"></i> Print
+                </button>
+            </div>
+            <div class="card-body" id="receipt">
+                <div class="text-center mb-4">
+                    <h2>Nigeria Institute of Town Planners</h2>
+                    <h3>Abuja Chapter</h3>
+                    <p class="mb-0">Membership Subscription Receipt</p>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5 class="border-bottom pb-2">Member Information</h5>
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Name:</th>
+                                <td>{{ current_user.first_name }} {{ current_user.last_name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Email:</th>
+                                <td>{{ current_user.email }}</td>
+                            </tr>
+                            <tr>
+                                <th>Phone:</th>
+                                <td>{{ current_user.phone_number }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="border-bottom pb-2">Payment Information</h5>
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Receipt No:</th>
+                                <td>NITP-{{ subscription.id }}-{{ subscription.year }}</td>
+                            </tr>
+                            <tr>
+                                <th>Date:</th>
+                                <td>{{ subscription.payment_date.strftime('%d %B, %Y') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Payment Ref:</th>
+                                <td>{{ subscription.payment_reference }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Description</th>
+                                <th>Year</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Annual Membership Subscription</td>
+                                <td>{{ subscription.year }}</td>
+                                <td class="text-end">₦{{ subscription.amount|int|format_number }}</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="2" class="text-end">Total:</th>
+                                <th class="text-end">₦{{ subscription.amount|int|format_number }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>Payment Status:</strong> Completed
+                        </div>
+                        
+                        <p><strong>Validity:</strong> {{ subscription.start_date.strftime('%d %B, %Y') }} to {{ subscription.end_date.strftime('%d %B, %Y') }}</p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <p><em>This is a computer-generated receipt and does not require a physical signature.</em></p>
+                        <div class="mt-4">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0MCIgc3Ryb2tlPSIjMDA2NmNjIiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiIC8+PHBhdGggZD0iTTMwLDUwIEw0NSw2NSBMNzAsMzUiIHN0cm9rZT0iIzAwNjZjYyIgc3Ryb2tlLXdpZHRoPSIzIiBmaWxsPSJub25lIiAvPjwvc3ZnPg==" alt="Seal" width="100">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('subscription.history') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Back to History
+                    </a>
+                    <button class="btn btn-primary" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i> Print Receipt
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        #receipt, #receipt * {
+            visibility: visible;
+        }
+        #receipt {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+        .card {
+            border: none !important;
+        }
+        .card-header, .card-footer {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}

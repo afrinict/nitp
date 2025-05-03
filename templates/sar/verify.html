@@ -1,0 +1,121 @@
+{% extends 'layout.html' %}
+
+{% block title %}Verify SAR Certificate - NITP Abuja Chapter{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">Verify SAR Certificate</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Enter the certificate number to verify the authenticity of a Site Analysis Report (SAR) certificate issued by the Nigeria Institute of Town Planners, Abuja Chapter.
+                </div>
+                
+                <form method="GET" action="{{ url_for('sar.verify') }}" class="mb-4">
+                    <div class="input-group">
+                        <input type="text" name="certificate_number" class="form-control" placeholder="Enter Certificate Number" value="{{ request.args.get('certificate_number', '') }}">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i> Verify
+                        </button>
+                    </div>
+                </form>
+                
+                {% if error %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <strong>Verification Failed:</strong> {{ error }}
+                    </div>
+                {% elif application %}
+                    <div class="card mb-4 border-success">
+                        <div class="card-header bg-success text-white">
+                            <h4 class="mb-0"><i class="fas fa-check-circle me-2"></i> Certificate Verified</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5 class="border-bottom pb-2">Certificate Information</h5>
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <th width="40%">Certificate Number:</th>
+                                            <td>{{ application.certificate_number }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Reference Number:</th>
+                                            <td>{{ application.reference_number }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Issue Date:</th>
+                                            <td>{{ application.updated_at.strftime('%d %B, %Y') }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Status:</th>
+                                            <td><span class="badge bg-success">Valid</span></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5 class="border-bottom pb-2">Site Information</h5>
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <th width="40%">Site Address:</th>
+                                            <td>{{ application.site_address }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>City:</th>
+                                            <td>{{ application.city }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>State:</th>
+                                            <td>{{ application.state }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Coordinates:</th>
+                                            <td>{{ application.latitude }}, {{ application.longitude }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5 class="border-bottom pb-2">Member Information</h5>
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <th width="40%">Name:</th>
+                                            <td>{{ user.first_name }} {{ user.last_name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Email:</th>
+                                            <td>{{ user.email }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        This certificate has been verified as authentic and valid. It was issued by the Nigeria Institute of Town Planners, Abuja Chapter.
+                    </div>
+                {% elif request.args.get('certificate_number') %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <strong>Verification Failed:</strong> The certificate number provided could not be found or is invalid. Please check the number and try again.
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-qrcode fa-5x mb-3 text-muted"></i>
+                        <h5>Scan the QR Code</h5>
+                        <p>For faster verification, scan the QR code on the certificate.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

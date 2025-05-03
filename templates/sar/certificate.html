@@ -1,0 +1,132 @@
+{% extends 'layout.html' %}
+
+{% block title %}SAR Certificate - NITP Abuja Chapter{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">SAR Certificate</h3>
+                <button class="btn btn-sm btn-outline-secondary" onclick="window.print()">
+                    <i class="fas fa-print me-1"></i> Print
+                </button>
+            </div>
+            <div class="card-body text-center" id="certificate-preview">
+                <div class="mb-4">
+                    <h2>Nigeria Institute of Town Planners</h2>
+                    <h3>Abuja Chapter</h3>
+                    <h4 class="mt-4">Site Analysis Report Certificate</h4>
+                </div>
+                
+                {% if application %}
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8 text-start">
+                                    <p><strong>Certificate Number:</strong> {{ application.certificate_number }}</p>
+                                    <p><strong>Reference Number:</strong> {{ application.reference_number }}</p>
+                                    <p><strong>Issue Date:</strong> {{ application.updated_at.strftime('%d %B, %Y') }}</p>
+                                    <p><strong>Member Name:</strong> {{ current_user.first_name }} {{ current_user.last_name }}</p>
+                                    <p><strong>Site Address:</strong> {{ application.site_address }}</p>
+                                    <p><strong>Coordinates:</strong> {{ application.latitude }}, {{ application.longitude }}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    {% if application.qr_code_path %}
+                                        <div class="qr-code-container">
+                                            <img src="{{ url_for('static', filename='uploads/' + application.qr_code_path) }}" class="img-fluid" alt="QR Code">
+                                            <p class="text-center mt-2"><small>Scan to verify</small></p>
+                                        </div>
+                                    {% else %}
+                                        <div class="qr-placeholder">
+                                            <i class="fas fa-qrcode fa-5x"></i>
+                                            <p><small>QR Code not available</small></p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p>This certificate confirms that the site analysis has been conducted and approved by the Nigeria Institute of Town Planners, Abuja Chapter.</p>
+                    
+                    <div class="mt-4 mb-4">
+                        <div class="row">
+                            <div class="col-6 text-start">
+                                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0MCIgc3Ryb2tlPSIjMDA2NmNjIiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiIC8+PHBhdGggZD0iTTMwLDUwIEw0NSw2NSBMNzAsMzUiIHN0cm9rZT0iIzAwNjZjYyIgc3Ryb2tlLXdpZHRoPSIzIiBmaWxsPSJub25lIiAvPjwvc3ZnPg==" alt="Official Seal" width="100">
+                                <p><small>Official Seal</small></p>
+                            </div>
+                            <div class="col-6 text-end">
+                                <p><small>For verification, visit:</small></p>
+                                <p><small>{{ url_for('sar.verify', _external=True) }}</small></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Certificate Status:</strong> Valid
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('sar.index') }}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-arrow-left me-1"></i> Back to Applications
+                        </a>
+                        <a href="{{ url_for('static', filename='uploads/' + application.certificate_path) }}" class="btn btn-primary" download>
+                            <i class="fas fa-download me-1"></i> Download Certificate
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <strong>Error:</strong> Certificate not found.
+                    </div>
+                    <a href="{{ url_for('sar.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Applications
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        #certificate-preview, #certificate-preview * {
+            visibility: visible;
+        }
+        #certificate-preview {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+        .card {
+            border: none !important;
+        }
+        .card-header, .btn, .alert {
+            display: none !important;
+        }
+    }
+    
+    .qr-code-container {
+        text-align: center;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+    
+    .qr-placeholder {
+        text-align: center;
+        padding: 20px;
+        border: 1px dashed #ddd;
+        border-radius: 5px;
+        color: #aaa;
+    }
+</style>
+{% endblock %}

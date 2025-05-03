@@ -1,0 +1,453 @@
+{% extends 'layout.html' %}
+
+{% block title %}Member Details - Admin - NITP Abuja Chapter{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Admin Navigation</h4>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{{ url_for('admin.index') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                </a>
+                <a href="{{ url_for('admin.members') }}" class="list-group-item list-group-item-action active">
+                    <i class="fas fa-users me-2"></i> Members
+                </a>
+                <a href="{{ url_for('admin.subscriptions') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-credit-card me-2"></i> Subscriptions
+                </a>
+                <a href="{{ url_for('admin.sar_applications') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-clipboard-list me-2"></i> SAR Applications
+                </a>
+                <a href="{{ url_for('admin.reports') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-chart-bar me-2"></i> Reports
+                </a>
+                <a href="{{ url_for('admin.chat_rooms') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-comments me-2"></i> Chat Rooms
+                </a>
+                <a href="{{ url_for('admin.audit_logs') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-history me-2"></i> Audit Logs
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">Member Details</h3>
+                <a href="{{ url_for('admin.members') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Members
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-4 mb-md-0">
+                        <div class="avatar-circle">
+                            <span class="initials">{{ user.first_name[0] }}{{ user.last_name[0] }}</span>
+                        </div>
+                        <h4 class="mt-3">{{ user.first_name }} {{ user.last_name }}</h4>
+                        <p class="text-muted">@{{ user.username }}</p>
+                        
+                        <span class="badge 
+                            {% if user.role.value == 'super_admin' %}
+                                bg-danger
+                            {% elif user.role.value == 'admin' %}
+                                bg-warning
+                            {% elif user.role.value == 'staff' %}
+                                bg-info
+                            {% else %}
+                                bg-secondary
+                            {% endif %}">
+                            {{ user.role.value|capitalize|replace('_', ' ') }}
+                        </span>
+                        
+                        {% if user.is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-danger">Inactive</span>
+                        {% endif %}
+                        
+                        <div class="mt-3">
+                            {% if current_user.role.value == 'super_admin' %}
+                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#roleModal">
+                                    <i class="fas fa-user-cog me-1"></i> Update Role
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-8">
+                        <h5 class="border-bottom pb-2">Personal Information</h5>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 fw-bold">Email:</div>
+                            <div class="col-sm-8">{{ user.email }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 fw-bold">Phone:</div>
+                            <div class="col-sm-8">{{ user.phone_number }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 fw-bold">Address:</div>
+                            <div class="col-sm-8">{{ user.address }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 fw-bold">City:</div>
+                            <div class="col-sm-8">{{ user.city }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 fw-bold">State:</div>
+                            <div class="col-sm-8">{{ user.state }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 fw-bold">Email Verified:</div>
+                            <div class="col-sm-8">
+                                {% if user.email_verified %}
+                                    <span class="text-success"><i class="fas fa-check-circle me-1"></i> Yes</span>
+                                {% else %}
+                                    <span class="text-danger"><i class="fas fa-times-circle me-1"></i> No</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-4 fw-bold">Member Since:</div>
+                            <div class="col-sm-8">{{ user.created_at.strftime('%d %B, %Y') }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% if profile %}
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">Educational Information</h3>
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#verificationModal">
+                        <i class="fas fa-user-check me-1"></i> Update Verification Status
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5 class="border-bottom pb-2">Secondary Education</h5>
+                            <div class="row mb-2">
+                                <div class="col-sm-5 fw-bold">School:</div>
+                                <div class="col-sm-7">{{ profile.secondary_school }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-5 fw-bold">Duration:</div>
+                                <div class="col-sm-7">{{ profile.secondary_school_start_year }} - {{ profile.secondary_school_end_year }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-5 fw-bold">Certificate:</div>
+                                <div class="col-sm-7">
+                                    {% if profile.secondary_school_cert_path %}
+                                        <a href="{{ url_for('static', filename='uploads/' + profile.secondary_school_cert_path) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-file-alt me-1"></i> View Certificate
+                                        </a>
+                                    {% else %}
+                                        <span class="text-danger"><i class="fas fa-times-circle me-1"></i> Not Uploaded</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5 class="border-bottom pb-2">Higher Education</h5>
+                            <div class="row mb-2">
+                                <div class="col-sm-5 fw-bold">Institution:</div>
+                                <div class="col-sm-7">{{ profile.higher_institution }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-5 fw-bold">Duration:</div>
+                                <div class="col-sm-7">{{ profile.higher_institution_start_year }} - {{ profile.higher_institution_end_year }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-5 fw-bold">Degree Type:</div>
+                                <div class="col-sm-7">{{ profile.degree_type }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-5 fw-bold">Certificate:</div>
+                                <div class="col-sm-7">
+                                    {% if profile.higher_institution_cert_path %}
+                                        <a href="{{ url_for('static', filename='uploads/' + profile.higher_institution_cert_path) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-file-alt me-1"></i> View Certificate
+                                        </a>
+                                    {% else %}
+                                        <span class="text-danger"><i class="fas fa-times-circle me-1"></i> Not Uploaded</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert 
+                        {% if profile.verification_status.value == 'verified' %}
+                            alert-success
+                        {% elif profile.verification_status.value == 'rejected' %}
+                            alert-danger
+                        {% else %}
+                            alert-warning
+                        {% endif %}">
+                        <i class="fas 
+                            {% if profile.verification_status.value == 'verified' %}
+                                fa-check-circle
+                            {% elif profile.verification_status.value == 'rejected' %}
+                                fa-times-circle
+                            {% else %}
+                                fa-clock
+                            {% endif %} me-2"></i>
+                        <strong>Verification Status:</strong> 
+                        {{ profile.verification_status.value|capitalize }}
+                        
+                        {% if profile.verification_status.value == 'pending' %}
+                            <p class="mb-0 mt-2">This profile is awaiting verification.</p>
+                        {% elif profile.verification_status.value == 'rejected' %}
+                            <p class="mb-0 mt-2">This profile was rejected with the following comments:</p>
+                            {% if profile.comments %}
+                                <p class="mb-0 mt-2"><strong>Comments:</strong> {{ profile.comments }}</p>
+                            {% endif %}
+                        {% elif profile.verification_status.value == 'verified' %}
+                            <p class="mb-0 mt-2">This profile was verified on {{ profile.verification_date.strftime('%d %B, %Y') }}</p>
+                            {% if profile.verified_by %}
+                                <p class="mb-0 mt-2"><strong>Verified by:</strong> 
+                                    {% set verifier = User.query.get(profile.verified_by) %}
+                                    {% if verifier %}
+                                        {{ verifier.first_name }} {{ verifier.last_name }}
+                                    {% else %}
+                                        Unknown
+                                    {% endif %}
+                                </p>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="mb-0">Subscription History</h3>
+            </div>
+            <div class="card-body">
+                {% if subscriptions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Year</th>
+                                    <th>Amount</th>
+                                    <th>Payment Date</th>
+                                    <th>Valid Until</th>
+                                    <th>Status</th>
+                                    <th>Reference</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subscription in subscriptions %}
+                                    <tr>
+                                        <td>{{ subscription.year }}</td>
+                                        <td>₦{{ subscription.amount|int|format_number }}</td>
+                                        <td>
+                                            {% if subscription.payment_date %}
+                                                {{ subscription.payment_date.strftime('%d %b, %Y') }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if subscription.end_date %}
+                                                {{ subscription.end_date.strftime('%d %b, %Y') }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if subscription.status.value == 'active' %}
+                                                    bg-success
+                                                {% elif subscription.status.value == 'pending' %}
+                                                    bg-warning
+                                                {% else %}
+                                                    bg-danger
+                                                {% endif %}">
+                                                {{ subscription.status.value|capitalize }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ subscription.payment_reference }}</small>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-credit-card fa-4x mb-3 text-muted"></i>
+                        <h5>No Subscription History</h5>
+                        <p>This member has no subscription records.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">SAR Applications</h3>
+            </div>
+            <div class="card-body">
+                {% if sar_applications %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Reference</th>
+                                    <th>Site Address</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for app in sar_applications %}
+                                    <tr>
+                                        <td>{{ app.reference_number }}</td>
+                                        <td>{{ app.site_address[:30] }}{% if app.site_address|length > 30 %}...{% endif %}</td>
+                                        <td>{{ app.created_at.strftime('%d %b, %Y') }}</td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if app.status.value in ['certificate_generated', 'certificate_delivered'] %}
+                                                    bg-success
+                                                {% elif app.status.value in ['under_review', 'submitted', 'approved'] %}
+                                                    bg-primary
+                                                {% elif app.status.value in ['payment_pending', 'payment_completed'] %}
+                                                    bg-warning
+                                                {% elif app.status.value == 'rejected' %}
+                                                    bg-danger
+                                                {% else %}
+                                                    bg-secondary
+                                                {% endif %}">
+                                                {{ app.status.value|capitalize|replace('_', ' ') }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('admin.sar_application_detail', application_id=app.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye me-1"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-clipboard-list fa-4x mb-3 text-muted"></i>
+                        <h5>No SAR Applications</h5>
+                        <p>This member has not submitted any SAR applications.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Role Update Modal -->
+<div class="modal fade" id="roleModal" tabindex="-1" aria-labelledby="roleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="roleModalLabel">Update User Role</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.update_role', user_id=user.id) }}">
+                <div class="modal-body">
+                    {{ role_form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ role_form.role.label(class="form-label") }}
+                        {{ role_form.role(class="form-select") }}
+                        {% for error in role_form.role.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Changing user roles grants or restricts access to administrative features. Please use caution.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    {{ role_form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Verification Modal -->
+{% if profile and verification_form %}
+<div class="modal fade" id="verificationModal" tabindex="-1" aria-labelledby="verificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="verificationModalLabel">Update Verification Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.verify_profile', user_id=user.id) }}">
+                <div class="modal-body">
+                    {{ verification_form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ verification_form.status.label(class="form-label") }}
+                        {{ verification_form.status(class="form-select") }}
+                        {% for error in verification_form.status.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ verification_form.comments.label(class="form-label") }}
+                        {{ verification_form.comments(class="form-control", rows=3) }}
+                        {% for error in verification_form.comments.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                        <div class="form-text">Please provide comments, especially if rejecting.</div>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        If approved, the member will be notified via email. If rejected, they will need to update their information.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    {{ verification_form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .avatar-circle {
+        width: 120px;
+        height: 120px;
+        background-color: var(--bs-primary);
+        text-align: center;
+        border-radius: 50%;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .initials {
+        font-size: 50px;
+        color: white;
+        text-transform: uppercase;
+    }
+</style>
+{% endblock %}
