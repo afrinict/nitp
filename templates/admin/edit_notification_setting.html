@@ -1,0 +1,114 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Edit Notification Setting | Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Edit Notification Setting</h2>
+        <a href="{{ url_for('admin.notification_settings') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Settings
+        </a>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">{{ setting.display_name }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info mb-4">
+                <i class="fas fa-info-circle"></i> 
+                {{ setting.description }}
+            </div>
+            
+            <form method="POST" action="{{ url_for('admin.edit_notification_setting', setting_id=setting.id) }}">
+                {{ form.hidden_tag() }}
+                
+                {% if setting.name in ['sms_notifications', 'whatsapp_notifications'] %}
+                <!-- Twilio Settings Form -->
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    You need valid Twilio credentials to use this notification channel.
+                    SMS messages will be sent to members for important notifications 
+                    like profile verification, subscription renewals, and SAR application updates.
+                </div>
+                
+                <div class="mb-3">
+                    {{ form.account_sid.label(class="form-label") }}
+                    {{ form.account_sid(class="form-control") }}
+                    <div class="form-text">Enter your Twilio Account SID from your Twilio dashboard</div>
+                    {% if form.account_sid.errors %}
+                    <div class="text-danger">
+                        {% for error in form.account_sid.errors %}
+                        <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    {{ form.auth_token.label(class="form-label") }}
+                    {{ form.auth_token(class="form-control") }}
+                    <div class="form-text">Enter your Twilio Auth Token from your Twilio dashboard</div>
+                    {% if form.auth_token.errors %}
+                    <div class="text-danger">
+                        {% for error in form.auth_token.errors %}
+                        <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    {{ form.phone_number.label(class="form-label") }}
+                    {{ form.phone_number(class="form-control") }}
+                    <div class="form-text">Enter your Twilio Phone Number in E.164 format (e.g., +1234567890)</div>
+                    {% if form.phone_number.errors %}
+                    <div class="text-danger">
+                        {% for error in form.phone_number.errors %}
+                        <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-text mb-3">
+                    <strong>Note:</strong> This notification channel will be automatically enabled when all fields are filled.
+                </div>
+                
+                {% else %}
+                <!-- General Settings Form -->
+                <div class="mb-3 form-check">
+                    {{ form.is_enabled(class="form-check-input") }}
+                    {{ form.is_enabled.label(class="form-check-label") }}
+                    {% if form.is_enabled.errors %}
+                    <div class="text-danger">
+                        {% for error in form.is_enabled.errors %}
+                        <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    {{ form.config_values.label(class="form-label") }}
+                    {{ form.config_values(class="form-control") }}
+                    <div class="form-text">JSON configuration for this notification channel (if required)</div>
+                    {% if form.config_values.errors %}
+                    <div class="text-danger">
+                        {% for error in form.config_values.errors %}
+                        <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

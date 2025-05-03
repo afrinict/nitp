@@ -1,15 +1,16 @@
 from datetime import datetime, timedelta
+import json
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SelectField, SubmitField
+from wtforms import StringField, TextAreaField, SelectField, SubmitField, BooleanField, PasswordField
 from wtforms.validators import DataRequired, Length
 from sqlalchemy import func, desc
 
 from app import db
 from models import (
     User, UserRole, MemberProfile, VerificationStatus, Subscription, 
-    SubscriptionStatus, SARApplication, SARStatus, AuditLog, ChatRoom
+    SubscriptionStatus, SARApplication, SARStatus, AuditLog, ChatRoom, NotificationSetting
 )
 from utils.email import send_verification_approval_email, send_sar_approval_email
 
@@ -42,6 +43,17 @@ class SARReviewForm(FlaskForm):
     ], validators=[DataRequired()])
     comments = TextAreaField('Review Comments')
     submit = SubmitField('Update Status')
+
+class NotificationSettingForm(FlaskForm):
+    is_enabled = BooleanField('Enable Notification Channel')
+    config_values = TextAreaField('Configuration (JSON format)', render_kw={"rows": 5})
+    submit = SubmitField('Save Settings')
+
+class TwilioSettingsForm(FlaskForm):
+    account_sid = StringField('Twilio Account SID', validators=[DataRequired()])
+    auth_token = PasswordField('Twilio Auth Token', validators=[DataRequired()])
+    phone_number = StringField('Twilio Phone Number', validators=[DataRequired()])
+    submit = SubmitField('Save Settings')
 
 class ChatRoomForm(FlaskForm):
     name = StringField('Room Name', validators=[DataRequired(), Length(min=3, max=100)])
@@ -438,6 +450,86 @@ def reports():
         data['monthly_applications'] = monthly_applications
     
     return render_template('admin/reports.html', report_type=report_type, data=data)
+
+@admin_bp.route('/notification-settings')
+@admin_required
+def notification_settings():
+    settings = NotificationSetting.query.all()
+    
+    return render_template(
+        'admin/notification_settings.html',
+        settings=settings
+    )
+
+@admin_bp.route('/notification-settings/<int:setting_id>', methods=['GET', 'POST'])
+@admin_required
+def edit_notification_setting(setting_id):
+    setting = NotificationSetting.query.get_or_404(setting_id)
+    
+    # Create the appropriate form based on the notification type
+    if setting.name in ['sms_notifications', 'whatsapp_notifications']:
+        form = TwilioSettingsForm()
+        if request.method == 'GET':
+            if setting.config_values:
+                form.account_sid.data = setting.config_values.get('account_sid', '')
+                form.auth_token.data = setting.config_values.get('auth_token', '')
+                form.phone_number.data = setting.config_values.get('phone_number', '')
+    else:
+        form = NotificationSettingForm()
+        if request.method == 'GET':
+            form.is_enabled.data = setting.is_enabled
+            if setting.config_values:
+                form.config_values.data = json.dumps(setting.config_values, indent=2)
+    
+    if form.validate_on_submit():
+        old_enabled = setting.is_enabled
+        
+        if isinstance(form, TwilioSettingsForm):
+            # Update Twilio settings
+            config = {
+                'account_sid': form.account_sid.data,
+                'auth_token': form.auth_token.data,
+                'phone_number': form.phone_number.data
+            }
+            setting.config_values = config
+            setting.is_enabled = all(config.values())  # Enable only if all fields are filled
+        else:
+            # Update general settings
+            setting.is_enabled = form.is_enabled.data
+            if form.config_values.data:
+                try:
+                    setting.config_values = json.loads(form.config_values.data)
+                except json.JSONDecodeError:
+                    flash('Invalid JSON format for configuration values', 'danger')
+                    return render_template(
+                        'admin/edit_notification_setting.html',
+                        setting=setting,
+                        form=form
+                    )
+        
+        db.session.commit()
+        
+        # Log the action
+        audit_log = AuditLog(
+            user_id=current_user.id,
+            action="Updated notification setting",
+            resource_type="NotificationSetting",
+            resource_id=setting.id,
+            details=f"Changed {setting.name} enabled from {old_enabled} to {setting.is_enabled}",
+            ip_address=request.remote_addr,
+            user_agent=request.user_agent.string
+        )
+        db.session.add(audit_log)
+        db.session.commit()
+        
+        flash(f'Notification setting "{setting.display_name}" updated successfully.', 'success')
+        return redirect(url_for('admin.notification_settings'))
+    
+    return render_template(
+        'admin/edit_notification_setting.html',
+        setting=setting,
+        form=form
+    )
 
 @admin_bp.route('/audit-logs')
 @admin_required
