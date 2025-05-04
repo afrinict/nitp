@@ -62,29 +62,36 @@ def index():
         ~ChatRoom.id.in_([room.id for room in user_rooms])
     ).all()
     
+    # Combine user rooms and public rooms
+    chat_rooms = user_rooms + public_rooms
+    
     # Get users for direct messaging
     users = User.query.filter(
         User.id != current_user.id,
         User.is_active == True
     ).order_by(User.username).all()
     
-    # Get unread message counts
-    unread_counts = {}
+    # Get direct messages
+    direct_messages = []
     for user in users:
-        count = Message.query.filter_by(
+        unread_count = Message.query.filter_by(
             sender_id=user.id,
             recipient_id=current_user.id,
             is_read=False
         ).count()
-        unread_counts[user.id] = count
+        
+        direct_messages.append({
+            'user': user,
+            'unread_count': unread_count
+        })
     
     return render_template(
         'chat/index.html',
-        user_rooms=user_rooms,
-        public_rooms=public_rooms,
+        chat_rooms=chat_rooms,
+        direct_messages=direct_messages,
         users=users,
-        unread_counts=unread_counts,
-        form=ChatRoomForm()
+        room_form=ChatRoomForm(),
+        form=ChatMessageForm()
     )
 
 @chat_bp.route('/room/<int:room_id>')
@@ -324,32 +331,48 @@ def send_room_message(room_id):
 # WebSocket events
 @socketio.on('join')
 def on_join(data):
-    if not current_user.is_authenticated:
-        return
-    
-    # Join personal room for direct messages
-    user_room = f"user_{current_user.id}"
-    join_room(user_room)
-    
-    # Join chat rooms that the user is a member of
-    user_rooms = ChatRoomMember.query.filter_by(user_id=current_user.id).all()
-    for member in user_rooms:
-        room_id = member.chat_room_id
-        room = f"room_{room_id}"
+    room = data.get('room')
+    if room:
         join_room(room)
+        emit('status', {
+            'msg': f"{current_user.first_name} {current_user.last_name} has joined the room.",
+            'user_id': current_user.id,
+            'user_name': f"{current_user.first_name} {current_user.last_name}"
+        }, room=room)
 
 @socketio.on('leave')
 def on_leave(data):
-    if not current_user.is_authenticated:
-        return
-    
-    # Leave personal room
-    user_room = f"user_{current_user.id}"
-    leave_room(user_room)
-    
-    # Leave chat rooms
-    user_rooms = ChatRoomMember.query.filter_by(user_id=current_user.id).all()
-    for member in user_rooms:
-        room_id = member.chat_room_id
-        room = f"room_{room_id}"
+    room = data.get('room')
+    if room:
         leave_room(room)
+        emit('status', {
+            'msg': f"{current_user.first_name} {current_user.last_name} has left the room.",
+            'user_id': current_user.id,
+            'user_name': f"{current_user.first_name} {current_user.last_name}"
+        }, room=room)
+
+@socketio.on('message')
+def handle_message(data):
+    room = data.get('room')
+    content = data.get('content')
+    file_path = data.get('file_path')
+    
+    if room and content:
+        # Create message in database
+        message = ChatMessage(
+            chat_room_id=room,
+            user_id=current_user.id,
+            content=content,
+            file_path=file_path
+        )
+        db.session.add(message)
+        db.session.commit()
+        
+        # Emit message to room
+        emit('message', {
+            'user_id': current_user.id,
+            'user_name': f"{current_user.first_name} {current_user.last_name}",
+            'content': content,
+            'file_path': file_path,
+            'timestamp': message.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        }, room=room)

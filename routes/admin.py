@@ -279,7 +279,8 @@ def subscriptions():
         status=status,
         year=year,
         years=years,
-        statuses=[s.value for s in SubscriptionStatus]
+        statuses=[s.value for s in SubscriptionStatus],
+        User=User
     )
 
 @admin_bp.route('/sar-applications')

@@ -49,9 +49,7 @@ class User(UserMixin, db.Model):
     city = db.Column(db.String(64), nullable=False)
     state = db.Column(db.String(64), nullable=False)
     role = db.Column(Enum(UserRole), default=UserRole.MEMBER)
-    is_active = db.Column(db.Boolean, default=False)
-    email_verified = db.Column(db.Boolean, default=False)
-    verification_token = db.Column(db.String(100))
+    is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -234,17 +232,6 @@ class AuditLog(db.Model):
     def __repr__(self):
         return f'<AuditLog {self.id}>'
 
-class EmailVerification(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    token = db.Column(db.String(100), nullable=False, unique=True)
-    is_used = db.Column(db.Boolean, default=False)
-    expires_at = db.Column(db.DateTime, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    # Relationship
-    user = db.relationship('User', foreign_keys=[user_id])
-
 class NotificationSetting(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
@@ -257,3 +244,17 @@ class NotificationSetting(db.Model):
     
     def __repr__(self):
         return f'<NotificationSetting {self.name}: {"Enabled" if self.is_enabled else "Disabled"}>'
+
+class EmailVerification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    token = db.Column(db.String(100), unique=True, nullable=False)
+    is_used = db.Column(db.Boolean, default=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship
+    user = db.relationship('User', foreign_keys=[user_id])
+    
+    def __repr__(self):
+        return f'<EmailVerification {self.user_id}>'

@@ -10,14 +10,14 @@ from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationE
 from sqlalchemy.exc import IntegrityError
 
 from app import db
-from models import User, EmailVerification
+from models import User, EmailVerification, UserRole
 from utils.email import send_verification_email
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 # Forms
 class LoginForm(FlaskForm):
-    email = EmailField('Email', validators=[DataRequired(), Email()])
+    identifier = StringField('Username or Email', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
     remember_me = BooleanField('Remember Me')
     submit = SubmitField('Login')
@@ -45,7 +45,7 @@ class RegistrationForm(FlaskForm):
         user = User.query.filter_by(email=email.data).first()
         if user:
             raise ValidationError('Email address already registered. Please use a different email.')
-    
+
     def validate_username(self, username):
         user = User.query.filter_by(username=username.data).first()
         if user:
@@ -74,13 +74,13 @@ def login():
     
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
+        # Try to find user by email first
+        user = User.query.filter_by(email=form.identifier.data).first()
+        if not user:
+            # If not found by email, try by username
+            user = User.query.filter_by(username=form.identifier.data).first()
         
         if user and user.check_password(form.password.data):
-            if not user.email_verified:
-                flash('Please verify your email before logging in.', 'warning')
-                return redirect(url_for('auth.login'))
-            
             login_user(user, remember=form.remember_me.data)
             next_page = request.args.get('next')
             flash('Login successful!', 'success')
@@ -105,60 +105,35 @@ def register():
     form = RegistrationForm()
     if form.validate_on_submit():
         try:
+            # Create new user
             user = User(
-                first_name=form.first_name.data,
-                last_name=form.last_name.data,
                 email=form.email.data,
                 username=form.username.data,
+                password_hash=generate_password_hash(form.password.data),
+                first_name=form.first_name.data,
+                last_name=form.last_name.data,
                 phone_number=form.phone_number.data,
                 address=form.address.data,
                 city=form.city.data,
-                state=form.state.data
+                state=form.state.data,
+                role=UserRole.MEMBER,
+                is_active=True
             )
-            user.set_password(form.password.data)
-            
-            # Create verification token
-            token = secrets.token_urlsafe(32)
-            expires_at = datetime.utcnow() + timedelta(hours=24)
-            verification = EmailVerification(
-                user=user,
-                token=token,
-                expires_at=expires_at
-            )
-            
+
+            # Add to database
             db.session.add(user)
-            db.session.add(verification)
             db.session.commit()
-            
-            # Send verification email
-            send_verification_email(user.email, token)
-            
-            flash('Registration successful! Please check your email to verify your account.', 'success')
+
+            flash('Registration successful! You can now log in.', 'success')
             return redirect(url_for('auth.login'))
-        
+            
         except IntegrityError:
             db.session.rollback()
             flash('An error occurred during registration. Please try again.', 'danger')
     
     return render_template('auth/register.html', form=form)
 
-@auth_bp.route('/verify-email/<token>')
-def verify_email(token):
-    verification = EmailVerification.query.filter_by(token=token, is_used=False).first()
-    
-    if not verification or verification.expires_at < datetime.utcnow():
-        flash('The verification link is invalid or has expired.', 'danger')
-        return redirect(url_for('auth.login'))
-    
-    verification.is_used = True
-    verification.user.email_verified = True
-    verification.user.is_active = True
-    db.session.commit()
-    
-    flash('Your email has been verified! You can now login.', 'success')
-    return redirect(url_for('auth.login'))
-
-@auth_bp.route('/resend-verification')
+@auth_bp.route('/resend-verification', methods=['GET', 'POST'])
 def resend_verification():
     if current_user.is_authenticated:
         return redirect(url_for('index'))

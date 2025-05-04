@@ -27,23 +27,27 @@ socketio = SocketIO()
 
 # Create the Flask application
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET")
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-# Configure database
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv()
+
+# Configure application settings
+app.config["SECRET_KEY"] = os.environ.get("SESSION_SECRET", "dev-secret-key")
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///nigeria_urban_planner.db")
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
 }
 
-# Configure email
-app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
-app.config["MAIL_PORT"] = int(os.environ.get("MAIL_PORT", 587))
-app.config["MAIL_USE_TLS"] = True
+# Configure email for development
+app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER", "localhost")
+app.config["MAIL_PORT"] = int(os.environ.get("MAIL_PORT", 1025))
+app.config["MAIL_USE_TLS"] = False
 app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME")
 app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD")
-app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_DEFAULT_SENDER", "noreply@nitp-abuja.org")
+app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_DEFAULT_SENDER", "noreply@nigeriaturbanplanner.com")
 
 # Configure file uploads
 app.config["UPLOAD_FOLDER"] = os.path.join(app.static_folder, "uploads")
@@ -51,11 +55,20 @@ app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB max upload
 
 # Initialize extensions with the app
 db.init_app(app)
+
+# Initialize other extensions
 login_manager.init_app(app)
 login_manager.login_view = "auth.login"
+login_manager.login_message = "Please log in to access this page."
+login_manager.login_message_category = "info"
+
 mail.init_app(app)
 csrf.init_app(app)
-socketio.init_app(app, cors_allowed_origins="*")
+socketio.init_app(app)
+
+# Create database tables if they don't exist
+with app.app_context():
+    db.create_all()
 
 # Create upload folders for different file types
 upload_folders = [
@@ -162,6 +175,15 @@ app.register_blueprint(chat_bp)
 @app.context_processor
 def inject_now():
     return {'now': datetime.utcnow()}
+
+# Custom template filters
+@app.template_filter('format_number')
+def format_number(value):
+    """Format a number with commas as thousand separators"""
+    try:
+        return "{:,}".format(float(value))
+    except (ValueError, TypeError):
+        return value
 
 # Home route
 @app.route('/')
